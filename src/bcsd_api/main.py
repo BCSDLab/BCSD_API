@@ -1,14 +1,29 @@
+import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .auth.router import router as auth_router
-from .dependencies import get_settings, get_sheets
+from .dependencies import get_authz, get_settings, get_sheets
 from .exception import register_handlers
 from .member.router import router as member_router
 from .track import router as track_router
+
+logger = logging.getLogger(__name__)
+
+SCHEMA_PATH = Path(__file__).resolve().parents[2] / "spicedb" / "schema.zed"
+
+
+def _init_spicedb(settings) -> None:
+    if not SCHEMA_PATH.exists():
+        logger.warning("SpiceDB schema not found: %s", SCHEMA_PATH)
+        return
+    authz = get_authz(settings)
+    authz.write_schema(SCHEMA_PATH.read_text())
+    logger.info("SpiceDB schema loaded")
 
 
 @asynccontextmanager
@@ -18,6 +33,10 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     sheets.init_sheets()
     from .sheets.defaults import seed
     seed(sheets)
+    try:
+        _init_spicedb(settings)
+    except Exception:
+        logger.warning("SpiceDB unavailable, skipping schema init")
     yield
 
 

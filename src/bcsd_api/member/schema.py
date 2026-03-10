@@ -16,3 +16,9 @@ class MemberDetail(MemberResponse):
     phone: str
     join_date: str
     last_updated: str
+
+
+class FiltersResponse(BaseModel):
+    tracks: list[str]
+    statuses: list[str]
+    payment_statuses: list[str]

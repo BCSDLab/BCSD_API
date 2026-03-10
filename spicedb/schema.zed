@@ -1,0 +1,79 @@
+/**
+ * BCSDLab 권한 관리 스키마
+ *
+ * 계층 구조 (아래에서 위로 권한 누적):
+ * 외부인 < 비기너 < 레귤러 < 교육장 < 트랙장 < 부회장/회장 < 멘토
+ *
+ * 한 사용자가 여러 역할을 가질 수 있음 (예: 레귤러 + 트랙장)
+ */
+
+definition user {}
+
+definition track {
+    relation leader: user
+    relation member: user
+
+    permission manage = leader
+    permission view = leader + member
+}
+
+definition organization {
+    /** 역할 관계 (낮은 → 높은) */
+    relation outsider: user
+    relation beginner: user
+    relation regular: user
+    relation educator: user
+    relation track_leader: user
+    relation vice_president: user
+    relation president: user
+    relation mentor: user
+
+    /** 계층 누적 권한 */
+    permission member_view = beginner + regular + educator + track_leader + vice_president + president + mentor
+    permission member_edit = regular + educator + track_leader + vice_president + president + mentor
+    permission fee_view = educator + track_leader + vice_president + president + mentor
+    permission fee_edit = vice_president + president + mentor
+    permission group_manage = vice_president + president + mentor
+    permission admin = president + mentor
+    permission full_control = mentor
+}
+
+definition member {
+    relation owner: user
+    relation organization: organization
+    relation track: track
+
+    permission view = owner + organization->member_view
+    permission edit = owner + organization->member_edit + track->leader
+    permission delete = organization->admin
+}
+
+definition fee {
+    relation organization: organization
+    relation payer: user
+
+    permission view = payer + organization->fee_view
+    permission edit = organization->fee_edit
+    permission delete = organization->admin
+}
+
+definition group {
+    relation organization: organization
+    relation leader: user
+    relation member: user
+
+    permission view = leader + member + organization->member_view
+    permission edit = leader + organization->group_manage
+    permission delete = organization->admin
+    permission manage = leader + organization->group_manage
+}
+
+definition event {
+    relation organization: organization
+    relation organizer: user
+    relation attendee: user
+
+    permission view = organizer + attendee + organization->member_view
+    permission edit = organizer + organization->group_manage
+    permission delete = organization->admin
+}

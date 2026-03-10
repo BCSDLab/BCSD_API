@@ -1,9 +1,13 @@
 from bcsd_api.exception import NotFound
 from bcsd_api.filter.base import PagedResponse, apply_filter
 from bcsd_api.filter.members import MemberFilter
+from bcsd_api.sheets.client import SheetsClient
 
 from .repository import MemberRepository
-from .schema import MemberDetail, MemberResponse
+from .schema import FiltersResponse, MemberDetail, MemberResponse
+
+STATUSES = ["Beginner", "Regular", "Mentor", "Alumni"]
+PAYMENT_STATUSES = ["Unpaid", "Paid", "Exempt"]
 
 
 def list_members(
@@ -22,3 +26,10 @@ def get_member(repo: MemberRepository, member_id: str) -> MemberDetail:
     if not row:
         raise NotFound(f"member {member_id} not found")
     return MemberDetail(**row)
+
+
+def get_filters(sheets: SheetsClient) -> FiltersResponse:
+    tracks = [r["name"] for r in sheets.get_records("tracks")]
+    return FiltersResponse(
+        tracks=tracks, statuses=STATUSES, payment_statuses=PAYMENT_STATUSES
+    )

@@ -23,3 +23,9 @@ class BadRequest(AppException):
     status_code = 400
     error_code = "BAD_REQUEST"
     message = "bad request"
+
+
+class Forbidden(AppException):
+    status_code = 403
+    error_code = "FORBIDDEN"
+    message = "permission denied"

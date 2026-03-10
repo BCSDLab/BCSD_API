@@ -1,0 +1,26 @@
+services:
+  spicedb:
+    image: authzed/spicedb:latest
+    command: serve
+    ports:
+      - "50051:50051"   # gRPC
+      - "8443:8443"     # HTTP gateway
+      - "9090:9090"     # metrics
+    environment:
+      SPICEDB_GRPC_PRESHARED_KEY: "${SPICEDB_TOKEN:-bcsd-dev-token}"
+      SPICEDB_DATASTORE_ENGINE: memory
+    healthcheck:
+      test: ["CMD", "grpc_health_probe", "-addr=localhost:50051"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    depends_on:
+      spicedb:
+        condition: service_healthy

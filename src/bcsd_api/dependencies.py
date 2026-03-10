@@ -3,6 +3,7 @@ from functools import lru_cache
 from fastapi import Depends, Request
 
 from .auth import token as jwt_token
+from .authz.client import AuthzClient
 from .config import Settings
 from .email import ResendSender
 from .email.sender import EmailSender
@@ -38,6 +39,17 @@ def get_email_sender(settings: Settings = Depends(get_settings)) -> EmailSender:
         return _sender_cache
     _sender_cache = ResendSender(settings.resend_api_key, settings.resend_sender)
     return _sender_cache
+
+
+_authz_cache: AuthzClient | None = None
+
+
+def get_authz(settings: Settings = Depends(get_settings)) -> AuthzClient:
+    global _authz_cache
+    if _authz_cache:
+        return _authz_cache
+    _authz_cache = AuthzClient(settings.spicedb_endpoint, settings.spicedb_token)
+    return _authz_cache
 
 
 def get_member_repo(sheets: SheetsClient = Depends(get_sheets)) -> MemberRepository:

@@ -1,14 +1,23 @@
 from fastapi import APIRouter, Depends
 
-from bcsd_api.dependencies import current_user, get_member_repo
+from bcsd_api.dependencies import current_user, get_member_repo, get_sheets
 from bcsd_api.filter.base import PagedResponse
 from bcsd_api.filter.members import MemberFilter
+from bcsd_api.sheets.client import SheetsClient
 
 from . import service
 from .repository import MemberRepository
-from .schema import MemberDetail, MemberResponse
+from .schema import FiltersResponse, MemberDetail, MemberResponse
 
 router = APIRouter(prefix="/v1/members", tags=["members"])
+
+
+@router.get("/filters", response_model=FiltersResponse)
+def get_filters(
+    _: dict = Depends(current_user),
+    sheets: SheetsClient = Depends(get_sheets),
+) -> FiltersResponse:
+    return service.get_filters(sheets)
 
 
 @router.get("", response_model=PagedResponse[MemberResponse])

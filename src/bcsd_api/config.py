@@ -13,4 +13,6 @@ class Settings(BaseSettings):
     cors_origins: str = "http://localhost:3000"
     cookie_name: str = "access_token"
     cookie_secure: bool = False
+    spicedb_endpoint: str = "localhost:50051"
+    spicedb_token: str = "bcsd-dev-token"
     model_config = {"env_file": ".env"}
