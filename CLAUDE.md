@@ -7,8 +7,7 @@ Club management automation system using **n8n** to orchestrate **Google Workspac
 ```
 Client → FastAPI (auth, member API) → Google Sheets (database)
        → Google OAuth (ID Token 검증)
-       → Firebase Auth (전화번호 검증)
-       → SMTP (학교 이메일 인증)
+       → Resend (학교 이메일 인증)
 
 n8n (automation workflows) → Google Sheets (database) → Slack/Email (output)
 ```

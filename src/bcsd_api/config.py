@@ -8,10 +8,9 @@ class Settings(BaseSettings):
     jwt_expire_minutes: int = 1440
     google_sheets_id: str = ""
     google_service_account_file: str = "credentials.json"
-    smtp_host: str = "smtp.gmail.com"
-    smtp_port: int = 587
-    smtp_user: str = ""
-    smtp_password: str = ""
-    firebase_credentials_file: str = "firebase-credentials.json"
-
+    resend_api_key: str = ""
+    resend_sender: str = "onboarding@resend.dev"
+    cors_origins: str = "http://localhost:3000"
+    cookie_name: str = "access_token"
+    cookie_secure: bool = False
     model_config = {"env_file": ".env"}

@@ -3,12 +3,13 @@ import string
 import time
 from dataclasses import dataclass
 
-import aiosmtplib
-from email.message import EmailMessage
+from bcsd_api.email.sender import EmailSender
+from bcsd_api.email.template import verify_body
 
 
-_CODE_TTL = 300
+_CODE_TTL = 600
 _CODE_LENGTH = 6
+_SUBJECT = "[BCSD] 이메일 인증"
 
 
 @dataclass
@@ -24,24 +25,10 @@ def _generate_code() -> str:
     return "".join(random.choices(string.digits, k=_CODE_LENGTH))
 
 
-def _build_message(sender: str, recipient: str, code: str) -> EmailMessage:
-    msg = EmailMessage()
-    msg["From"] = sender
-    msg["To"] = recipient
-    msg["Subject"] = "[BCSDLab] Email Verification Code"
-    msg.set_content(f"Your verification code is: {code}\nExpires in 5 minutes.")
-    return msg
-
-
-async def send_code(email: str, host: str, port: int, user: str, password: str) -> None:
+def send_code(email: str, sender: EmailSender) -> None:
     code = _generate_code()
     _store[email] = _Pending(code=code, expires=time.time() + _CODE_TTL)
-    msg = _build_message(user, email, code)
-    await aiosmtplib.send(
-        msg, hostname=host, port=port,
-        username=user, password=password,
-        use_tls=False, start_tls=True,
-    )
+    sender.send(to=email, subject=_SUBJECT, body=verify_body(code))
 
 
 def confirm_code(email: str, code: str) -> bool:

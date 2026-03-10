@@ -1,9 +1,8 @@
 from datetime import datetime, timezone, timedelta
 
-import firebase_admin.auth as firebase_auth
-
 from bcsd_api.config import Settings
-from bcsd_api.exception import BadRequest, Conflict, Unauthorized
+from bcsd_api.email.sender import EmailSender
+from bcsd_api.exception import Conflict, Unauthorized
 from bcsd_api.id_gen import generate_id
 from bcsd_api.sheets.client import SheetsClient
 
@@ -23,11 +22,8 @@ def login(google_token: str, settings: Settings, sheets: SheetsClient) -> str:
     return _issue_jwt(payload, settings)
 
 
-async def send_verify(email: str, settings: Settings) -> None:
-    await verify.send_code(
-        email, settings.smtp_host, settings.smtp_port,
-        settings.smtp_user, settings.smtp_password,
-    )
+def send_verify(email: str, sender: EmailSender) -> None:
+    verify.send_code(email, sender)
 
 
 def confirm_verify(email: str, code: str) -> bool:
@@ -36,18 +32,17 @@ def confirm_verify(email: str, code: str) -> bool:
 
 def register(
     google_token: str,
+    name: str,
     school_email: str,
     phone: str,
-    firebase_token: str,
     track: str,
     settings: Settings,
     sheets: SheetsClient,
 ) -> str:
     profile = google_auth.verify_token(google_token, settings.google_client_id)
     _check_duplicate(profile["email"], sheets)
-    _verify_firebase(firebase_token)
     member_id = generate_id("M")
-    row = _build_row(member_id, profile, school_email, phone, track)
+    row = _build_row(member_id, name, profile["email"], school_email, phone, track)
     sheets.append_row("members", row)
     payload = {"sub": member_id, "email": profile["email"]}
     return _issue_jwt(payload, settings)
@@ -65,22 +60,15 @@ def _check_duplicate(email: str, sheets: SheetsClient) -> None:
         raise Conflict("member already registered")
 
 
-def _verify_firebase(firebase_token: str) -> None:
-    try:
-        firebase_auth.verify_id_token(firebase_token)
-    except Exception:
-        raise BadRequest("invalid firebase phone token")
-
-
 def _now_kst() -> str:
     return datetime.now(_KST).strftime("%Y-%m-%d %H:%M:%S")
 
 
 def _build_row(
-    member_id: str, profile: dict, school_email: str, phone: str, track: str
+    member_id: str, name: str, email: str, school_email: str, phone: str, track: str
 ) -> dict:
     now = _now_kst()
-    base = _base_fields(member_id, profile["name"], profile["email"])
+    base = _base_fields(member_id, name, email)
     extra = {"school_email": school_email, "phone": phone, "track": track}
     timestamps = {"join_date": now, "last_updated": now}
     return {**base, **extra, **timestamps}

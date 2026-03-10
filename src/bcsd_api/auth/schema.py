@@ -25,10 +25,15 @@ class ConfirmEmailResponse(BaseModel):
 
 class RegisterRequest(BaseModel):
     google_token: str
+    name: str
     school_email: str
     phone: str
-    firebase_token: str
     track: str
+
+
+class MeResponse(BaseModel):
+    id: str
+    email: str
 
 
 class MessageResponse(BaseModel):
