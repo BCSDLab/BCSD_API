@@ -30,7 +30,7 @@ n8n (automation workflows) → Google Sheets (database) → Slack/Email (output)
 - **Trigger**: Google Sheets trigger (polling, 1-2 min delay) - NOT Apps Script webhooks
 - **Notifications**: Email (SMTP) for MVP, Slack DM as enhancement
 - **IDs**: `{prefix}-{YYYYMMDDHHmmss}-{random3}` (e.g., `M-20240128143022-A7K`)
-- **Package name**: `bcsd_api` (backend), `frontend/` (frontend)
+- **Package name**: `bcsd_api`
 - **Timezone**: `Asia/Seoul` (KST)
 - **Fee amount**: 10,000 KRW/month (MVP constant)
 
@@ -88,6 +88,5 @@ See `memory/plan-tasks.md` for detailed task breakdown.
 - Commit messages: `feat(scope): description`, `docs(scope): description`
 - Workflow exports: `workflows/*.json`
 - Documentation: `docs/*.md`
-- Backend source: `src/bcsd_api/`
-- Frontend source: `frontend/`
+- Source: `src/bcsd_api/`
 - Credentials: NEVER commit (`.gitignore` enforced)
