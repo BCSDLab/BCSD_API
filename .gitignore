@@ -506,5 +506,10 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
+# Credentials
+*.json
+!package.json
+!tsconfig.json
+
 # End of https://www.toptal.com/developers/gitignore/api/intellij+all,pycharm+all,visualstudiocode,python,pythonvanilla,macos,windows,linux,git,jetbrains+all
 

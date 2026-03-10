@@ -6,8 +6,8 @@ from bcsd_api.sheets.client import SheetsClient
 from .repository import MemberRepository
 from .schema import FiltersResponse, MemberDetail, MemberResponse
 
-STATUSES = ["Beginner", "Regular", "Mentor", "Alumni"]
-PAYMENT_STATUSES = ["Unpaid", "Paid", "Exempt"]
+def _names(sheets: SheetsClient, sheet: str) -> list[str]:
+    return [r["name"] for r in sheets.get_records(sheet)]
 
 
 def list_members(
@@ -29,7 +29,8 @@ def get_member(repo: MemberRepository, member_id: str) -> MemberDetail:
 
 
 def get_filters(sheets: SheetsClient) -> FiltersResponse:
-    tracks = [r["name"] for r in sheets.get_records("tracks")]
     return FiltersResponse(
-        tracks=tracks, statuses=STATUSES, payment_statuses=PAYMENT_STATUSES
+        tracks=_names(sheets, "tracks"),
+        statuses=_names(sheets, "statuses"),
+        payment_statuses=_names(sheets, "payment_statuses"),
     )

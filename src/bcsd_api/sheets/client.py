@@ -31,6 +31,8 @@ _SCHEMAS: dict[str, list[str]] = {
         "input_data", "output_data", "error_message",
     ],
     "tracks": ["name"],
+    "statuses": ["name"],
+    "payment_statuses": ["name"],
 }
 
 
