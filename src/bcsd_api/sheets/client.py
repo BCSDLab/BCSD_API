@@ -8,34 +8,6 @@ _SCOPES = [
 ]
 
 
-_SCHEMAS: dict[str, list[str]] = {
-    "members": [
-        "id", "name", "email", "school_email", "phone",
-        "status", "track", "team", "join_date",
-        "payment_status", "last_updated",
-    ],
-    "fees": [
-        "id", "member_id", "amount", "paid_date",
-        "payment_method", "notes", "semester", "last_updated",
-    ],
-    "groups": [
-        "id", "name", "type", "parent_id",
-        "size", "leader_email", "last_updated",
-    ],
-    "events": [
-        "id", "title", "date", "type",
-        "organizer", "attendees", "notes",
-    ],
-    "workflow_logs": [
-        "timestamp", "workflow_name", "status",
-        "input_data", "output_data", "error_message",
-    ],
-    "tracks": ["name"],
-    "statuses": ["name"],
-    "payment_statuses": ["name"],
-}
-
-
 class SheetsClient:
     def __init__(self, credentials_file: str, spreadsheet_id: str):
         creds = Credentials.from_service_account_file(
@@ -44,22 +16,9 @@ class SheetsClient:
         gc = gspread.authorize(creds)
         self._spreadsheet = gc.open_by_key(spreadsheet_id)
 
-    def init_sheets(self) -> None:
-        existing = {ws.title for ws in self._spreadsheet.worksheets()}
-        for name, headers in _SCHEMAS.items():
-            if name in existing:
-                continue
-            ws = self._spreadsheet.add_worksheet(name, rows=1000, cols=len(headers))
-            ws.append_row(headers)
-        self._delete_default(existing)
-
-    def _delete_default(self, existing: set[str]) -> None:
-        default = "시트1"
-        if default not in existing:
-            return
-        if len(self._spreadsheet.worksheets()) < 2:
-            return
-        self._spreadsheet.del_worksheet(self._spreadsheet.worksheet(default))
+    @property
+    def spreadsheet(self) -> gspread.Spreadsheet:
+        return self._spreadsheet
 
     def get_records(self, sheet_name: str) -> list[dict]:
         worksheet = self._spreadsheet.worksheet(sheet_name)
@@ -67,10 +26,10 @@ class SheetsClient:
 
     def find_row(self, sheet_name: str, column: str, value: str) -> dict | None:
         records = self.get_records(sheet_name)
-        for record in records:
-            if str(record.get(column, "")) == value:
-                return record
-        return None
+        idx = self._find_index(records, column, value)
+        if idx is None:
+            return None
+        return records[idx]
 
     def append_row(self, sheet_name: str, row: dict) -> None:
         worksheet = self._spreadsheet.worksheet(sheet_name)
@@ -78,9 +37,13 @@ class SheetsClient:
         values = [row.get(h, "") for h in headers]
         worksheet.append_row(values)
 
+    @staticmethod
+    def _matches(record: dict, column: str, value: str) -> bool:
+        return str(record.get(column, "")) == value
+
     def _find_index(self, records: list[dict], column: str, value: str) -> int | None:
         for idx, record in enumerate(records):
-            if str(record.get(column, "")) == value:
+            if self._matches(record, column, value):
                 return idx
         return None
 

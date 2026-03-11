@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 
 class MemberResponse(BaseModel):
@@ -12,10 +12,17 @@ class MemberResponse(BaseModel):
 
 
 class MemberDetail(MemberResponse):
+    department: str
+    student_id: str = ""
     school_email: str
     phone: str
     join_date: str
     last_updated: str
+
+    @field_validator("student_id", mode="before")
+    @classmethod
+    def coerce_student_id(cls, v):
+        return str(v)
 
 
 class FiltersResponse(BaseModel):

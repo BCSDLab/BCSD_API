@@ -30,9 +30,8 @@ def _init_spicedb(settings) -> None:
 async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     settings = get_settings()
     sheets = get_sheets(settings)
-    sheets.init_sheets()
-    from .sheets.defaults import seed
-    seed(sheets)
+    from .sheets.migrate import run as run_migrations
+    run_migrations(sheets.spreadsheet)
     try:
         _init_spicedb(settings)
     except Exception:

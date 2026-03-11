@@ -14,7 +14,6 @@ router = APIRouter(prefix="/v1/members", tags=["members"])
 
 @router.get("/filters", response_model=FiltersResponse)
 def get_filters(
-    _: dict = Depends(current_user),
     sheets: SheetsClient = Depends(get_sheets),
 ) -> FiltersResponse:
     return service.get_filters(sheets)

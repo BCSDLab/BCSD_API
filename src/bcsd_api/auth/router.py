@@ -69,7 +69,8 @@ def post_register(
     sheets: SheetsClient = Depends(get_sheets),
 ) -> LoginResponse:
     token = service.register(
-        body.google_token, body.name, body.school_email,
+        body.google_token, body.name, body.department,
+        body.student_id, body.school_email,
         body.phone, body.track, settings, sheets,
     )
     _set_cookie(response, token, settings)

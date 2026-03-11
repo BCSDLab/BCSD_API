@@ -26,6 +26,8 @@ class ConfirmEmailResponse(BaseModel):
 class RegisterRequest(BaseModel):
     google_token: str
     name: str
+    department: str
+    student_id: str
     school_email: str
     phone: str
     track: str

@@ -17,39 +17,31 @@ def get_settings() -> Settings:
     return Settings()
 
 
-_sheets_cache: SheetsClient | None = None
+@lru_cache
+def _create_sheets(credentials: str, sheets_id: str) -> SheetsClient:
+    return SheetsClient(credentials, sheets_id)
 
 
 def get_sheets(settings: Settings = Depends(get_settings)) -> SheetsClient:
-    global _sheets_cache
-    if _sheets_cache:
-        return _sheets_cache
-    _sheets_cache = SheetsClient(
-        settings.google_service_account_file, settings.google_sheets_id
-    )
-    return _sheets_cache
+    return _create_sheets(settings.google_service_account_file, settings.google_sheets_id)
 
 
-_sender_cache: EmailSender | None = None
+@lru_cache
+def _create_sender(api_key: str, sender: str) -> EmailSender:
+    return ResendSender(api_key, sender)
 
 
 def get_email_sender(settings: Settings = Depends(get_settings)) -> EmailSender:
-    global _sender_cache
-    if _sender_cache:
-        return _sender_cache
-    _sender_cache = ResendSender(settings.resend_api_key, settings.resend_sender)
-    return _sender_cache
+    return _create_sender(settings.resend_api_key, settings.resend_sender)
 
 
-_authz_cache: AuthzClient | None = None
+@lru_cache
+def _create_authz(endpoint: str, token: str) -> AuthzClient:
+    return AuthzClient(endpoint, token)
 
 
 def get_authz(settings: Settings = Depends(get_settings)) -> AuthzClient:
-    global _authz_cache
-    if _authz_cache:
-        return _authz_cache
-    _authz_cache = AuthzClient(settings.spicedb_endpoint, settings.spicedb_token)
-    return _authz_cache
+    return _create_authz(settings.spicedb_endpoint, settings.spicedb_token)
 
 
 def get_member_repo(sheets: SheetsClient = Depends(get_sheets)) -> MemberRepository:

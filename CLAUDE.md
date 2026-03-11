@@ -34,7 +34,7 @@ n8n (automation workflows) → Google Sheets (database) → Slack/Email (output)
 - **Fee amount**: 10,000 KRW/month (MVP constant)
 
 ## Google Sheets Schema
-- `members`: id, name, email, school_email, phone, status, track, team, join_date, payment_status, last_updated
+- `members`: id, name, email, department, student_id, school_email, phone, status, track, team, join_date, payment_status, last_updated
 - `fees`: id, member_id, amount, paid_date, payment_method, notes, semester, last_updated
 - `groups`: id, name, type, parent_id, size, leader_email, last_updated
 - `events`: id, title, date, type, organizer, attendees, notes
