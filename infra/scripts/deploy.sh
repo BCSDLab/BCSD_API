@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-COMPOSE="sudo docker compose --env-file .env -f infra/docker/docker-compose.yml"
-COMPOSE_DB="sudo docker compose --env-file .env -f infra/docker/docker-compose.db.yml"
+COMPOSE="sudo docker compose -p bcsd-app --env-file .env -f infra/docker/docker-compose.yml"
+COMPOSE_DB="sudo docker compose -p bcsd-db --env-file .env -f infra/docker/docker-compose.db.yml"
 NGINX_CONF="infra/nginx/bcsd-api.conf"
 NGINX_DEST="/etc/nginx/sites-enabled/bcsd-api.conf"
 HEALTH_PATH="/openapi.json"
