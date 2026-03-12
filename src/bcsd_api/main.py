@@ -48,8 +48,6 @@ def create_app() -> FastAPI:
         redoc_url=None,
     )
     settings = get_settings()
-    if not settings.jwt_secret:
-        raise RuntimeError("JWT_SECRET is required in .env")
     from . import slack_log
     slack_log.setup(settings.slack_bot_token, settings.slack_error_channel)
     app.add_middleware(
