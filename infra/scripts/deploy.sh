@@ -4,7 +4,8 @@ set -euo pipefail
 COMPOSE="sudo docker compose -p bcsd-app --env-file .env -f infra/docker/docker-compose.yml"
 COMPOSE_DB="sudo docker compose -p bcsd-db --env-file .env -f infra/docker/docker-compose.db.yml"
 NGINX_CONF="infra/nginx/bcsd-api.conf"
-NGINX_DEST="/etc/nginx/sites-enabled/bcsd-api.conf"
+NGINX_AVAILABLE="/etc/nginx/sites-available/bcsd-api.conf"
+NGINX_ENABLED="/etc/nginx/sites-enabled/bcsd-api.conf"
 HEALTH_PATH="/openapi.json"
 MAX_RETRIES=10
 
@@ -79,7 +80,8 @@ fi
 echo "4. Switching nginx → $NEXT"
 sed -i "s/proxy_pass http:\/\/api_${CURRENT}/proxy_pass http:\/\/api_${NEXT}/g" "$NGINX_CONF"
 sudo mkdir -p /var/www/certbot
-sudo cp "$NGINX_CONF" "$NGINX_DEST"
+sudo cp "$NGINX_CONF" "$NGINX_AVAILABLE"
+sudo ln -sf "$NGINX_AVAILABLE" "$NGINX_ENABLED"
 sudo nginx -t && sudo nginx -s reload
 
 echo "5. Stopping old ($CURRENT)..."
