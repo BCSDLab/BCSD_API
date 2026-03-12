@@ -510,6 +510,7 @@ $RECYCLE.BIN/
 *.json
 !package.json
 !tsconfig.json
+!pyrightconfig.json
 
 # Generated nginx conf (envsubst output from .template)
 infra/nginx/bcsd-api.conf
