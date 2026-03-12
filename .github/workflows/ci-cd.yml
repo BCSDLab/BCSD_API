@@ -86,5 +86,6 @@ jobs:
           port: ${{ secrets.SERVER_PORT }}
           script: |
             cd ~/BCSD_API
-            git pull origin main
+            git fetch origin main
+            git reset --hard origin/main
             bash infra/scripts/deploy.sh

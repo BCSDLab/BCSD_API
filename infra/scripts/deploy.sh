@@ -64,7 +64,7 @@ echo "1. Building $NEXT..."
 $COMPOSE build "api-${NEXT}"
 
 echo "2. Starting $NEXT..."
-$COMPOSE up -d "api-${NEXT}"
+$COMPOSE up -d --remove-orphans "api-${NEXT}"
 
 echo "3. Health check on api-${NEXT}..."
 if ! health_check "$NEXT"; then
