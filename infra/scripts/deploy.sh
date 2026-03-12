@@ -2,6 +2,7 @@
 set -euo pipefail
 
 COMPOSE="docker compose --env-file .env -f infra/docker/docker-compose.yml"
+COMPOSE_DB="docker compose --env-file .env -f infra/docker/docker-compose.db.yml"
 NGINX_CONF="infra/docker/nginx.conf"
 HEALTH_PATH="/openapi.json"
 MAX_RETRIES=10
@@ -50,6 +51,9 @@ check_credentials() {
 echo "=== BCSD API Blue-Green Deploy ==="
 
 check_credentials
+
+echo "0. Ensuring DB services..."
+$COMPOSE_DB up -d
 
 CURRENT=$(current_slot)
 NEXT=$(next_slot)
