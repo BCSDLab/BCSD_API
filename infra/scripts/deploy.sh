@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-COMPOSE="docker compose -f infra/docker/docker-compose.yml"
+COMPOSE="docker compose --env-file .env -f infra/docker/docker-compose.yml"
 NGINX_CONF="infra/docker/nginx.conf"
 HEALTH_PATH="/openapi.json"
 MAX_RETRIES=10
