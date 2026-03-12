@@ -3,7 +3,8 @@ set -euo pipefail
 
 COMPOSE="sudo docker compose --env-file .env -f infra/docker/docker-compose.yml"
 COMPOSE_DB="sudo docker compose --env-file .env -f infra/docker/docker-compose.db.yml"
-NGINX_CONF="infra/docker/nginx.conf"
+NGINX_CONF="infra/nginx/bcsd-api.conf"
+NGINX_DEST="/etc/nginx/sites-enabled/bcsd-api.conf"
 HEALTH_PATH="/openapi.json"
 MAX_RETRIES=10
 
@@ -16,12 +17,11 @@ next_slot() {
 }
 
 health_check() {
-    local container="api-${1}"
+    local port
+    port=$(grep -m1 "^API_$(echo "$1" | tr '[:lower:]' '[:upper:]')_PORT=" .env | cut -d= -f2-)
     local retries=0
     while [ $retries -lt $MAX_RETRIES ]; do
-        if $COMPOSE exec "$container" python -c \
-            "import urllib.request; urllib.request.urlopen('http://localhost:8000${HEALTH_PATH}')" \
-            > /dev/null 2>&1; then
+        if curl -sf "http://localhost:${port}${HEALTH_PATH}" > /dev/null 2>&1; then
             return 0
         fi
         retries=$((retries + 1))
@@ -63,8 +63,8 @@ echo "Current: $CURRENT → Deploying: $NEXT"
 echo "1. Building $NEXT..."
 $COMPOSE build "api-${NEXT}"
 
-echo "2. Starting $NEXT + nginx..."
-$COMPOSE up -d "api-${NEXT}" nginx
+echo "2. Starting $NEXT..."
+$COMPOSE up -d "api-${NEXT}"
 
 echo "3. Health check on api-${NEXT}..."
 if ! health_check "$NEXT"; then
@@ -77,8 +77,9 @@ if ! health_check "$NEXT"; then
 fi
 
 echo "4. Switching nginx → $NEXT"
-sed -i "s/proxy_pass http:\/\/api_${CURRENT}/proxy_pass http:\/\/api_${NEXT}/" "$NGINX_CONF"
-$COMPOSE exec nginx nginx -s reload
+sed -i "s/proxy_pass http:\/\/api_${CURRENT}/proxy_pass http:\/\/api_${NEXT}/g" "$NGINX_CONF"
+sudo cp "$NGINX_CONF" "$NGINX_DEST"
+sudo nginx -t && sudo nginx -s reload
 
 echo "5. Stopping old ($CURRENT)..."
 $COMPOSE stop "api-${CURRENT}"

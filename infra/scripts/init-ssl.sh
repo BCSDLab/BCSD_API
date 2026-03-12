@@ -5,18 +5,14 @@ if [ -f .env ]; then
     set -a; source .env; set +a
 fi
 
-COMPOSE="sudo docker compose --env-file .env -f infra/docker/docker-compose.yml"
 DOMAIN="${DOMAIN:?Set DOMAIN in .env}"
 N8N_DOMAIN="${N8N_DOMAIN}"
 FRONTEND_DOMAIN="${FRONTEND_DOMAIN}"
 
 echo "=== Initial SSL Certificate Setup ==="
 
-echo "1. Starting nginx for ACME challenge..."
-$COMPOSE up -d nginx
-
-echo "2. Requesting certificate for $DOMAIN..."
-$COMPOSE run --rm certbot certonly \
+echo "1. Requesting certificate for $DOMAIN..."
+sudo certbot certonly \
     --webroot \
     -w /var/www/certbot \
     -d "$DOMAIN" \
@@ -24,8 +20,8 @@ $COMPOSE run --rm certbot certonly \
     --agree-tos
 
 if [ -n "$N8N_DOMAIN" ]; then
-    echo "3. Requesting certificate for $N8N_DOMAIN..."
-    $COMPOSE run --rm certbot certonly \
+    echo "2. Requesting certificate for $N8N_DOMAIN..."
+    sudo certbot certonly \
         --webroot \
         -w /var/www/certbot \
         -d "$N8N_DOMAIN" \
@@ -34,8 +30,8 @@ if [ -n "$N8N_DOMAIN" ]; then
 fi
 
 if [ -n "$FRONTEND_DOMAIN" ]; then
-    echo "4. Requesting certificate for $FRONTEND_DOMAIN (+ internal.bcsdlab.com)..."
-    $COMPOSE run --rm certbot certonly \
+    echo "3. Requesting certificate for $FRONTEND_DOMAIN (+ internal.bcsdlab.com)..."
+    sudo certbot certonly \
         --webroot \
         -w /var/www/certbot \
         -d "$FRONTEND_DOMAIN" \
@@ -44,8 +40,8 @@ if [ -n "$FRONTEND_DOMAIN" ]; then
         --agree-tos
 fi
 
-echo "5. Reloading nginx with SSL..."
-$COMPOSE exec nginx nginx -s reload
+echo "4. Reloading nginx..."
+sudo nginx -t && sudo nginx -s reload
 
 echo "=== SSL setup complete ==="
-echo "Auto-renewal is handled by the certbot container."
+echo "Auto-renewal: sudo certbot renew (via system cron/timer)"

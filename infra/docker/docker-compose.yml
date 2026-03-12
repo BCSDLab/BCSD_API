@@ -8,8 +8,8 @@ services:
       - ../../.env
     volumes:
       - ../../${GOOGLE_SERVICE_ACCOUNT_FILE}:/app/${GOOGLE_SERVICE_ACCOUNT_FILE}:ro
-    expose:
-      - "8000"
+    ports:
+      - "${API_BLUE_PORT}:8000"
     command: ["uvicorn", "bcsd_api.main:app", "--host", "0.0.0.0", "--port", "8000", "--timeout-graceful-shutdown", "${GRACEFUL_TIMEOUT}"]
     stop_grace_period: ${GRACEFUL_TIMEOUT}s
     networks:
@@ -17,16 +17,18 @@ services:
 
   api-green:
     <<: *api
+    ports:
+      - "${API_GREEN_PORT}:8000"
 
   n8n:
     image: n8nio/n8n:latest
     restart: unless-stopped
-    expose:
-      - "5678"
+    ports:
+      - "${N8N_PORT}:5678"
     environment:
-      N8N_HOST: n8n.bcsdlab.com
+      N8N_HOST: "${N8N_DOMAIN}"
       N8N_PROTOCOL: https
-      WEBHOOK_URL: https://n8n.bcsdlab.com/
+      WEBHOOK_URL: "https://${N8N_DOMAIN}/"
       N8N_BASIC_AUTH_ACTIVE: "true"
       N8N_BASIC_AUTH_USER: "${N8N_AUTH_USER}"
       N8N_BASIC_AUTH_PASSWORD: "${N8N_AUTH_PASSWORD}"
@@ -36,39 +38,8 @@ services:
     networks:
       - bcsd
 
-  nginx:
-    image: nginx:alpine
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
-      - certbot-webroot:/var/www/certbot:ro
-      - certbot-certs:/etc/letsencrypt:ro
-    depends_on:
-      - api-blue
-      - api-green
-      - n8n
-    networks:
-      - bcsd
-
-  certbot:
-    image: certbot/certbot:latest
-    volumes:
-      - certbot-webroot:/var/www/certbot
-      - certbot-certs:/etc/letsencrypt
-      - ../scripts/certbot_slack.py:/usr/local/bin/certbot_slack.py:ro
-    environment:
-      SLACK_BOT_TOKEN: "${SLACK_BOT_TOKEN}"
-      SLACK_CERTBOT_CHANNEL: "${SLACK_CERTBOT_CHANNEL}"
-      SLACK_SERVER_NAME: "${SLACK_SERVER_NAME}"
-    entrypoint: /bin/sh -c "trap exit TERM; while :; do python /usr/local/bin/certbot_slack.py; sleep 12h & wait $${!}; done"
-
 volumes:
   n8n-data:
-  certbot-webroot:
-  certbot-certs:
 
 networks:
   bcsd:
