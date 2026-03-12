@@ -43,7 +43,7 @@ jobs:
       - run: pip install -e ".[dev]"
       - run: pytest -v --junitxml=test-results.xml || [ $? -eq 5 ]
 
-      - uses: EnricoMi/publish-unit-test-result-action@v2
+      - uses: EnricoMi/publish-unit-test-result-action@v2.23.0
         if: always()
         with:
           files: test-results.xml
@@ -55,7 +55,7 @@ jobs:
       contents: read
     steps:
       - name: Checkout credentials
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: BCSDLab/bcsdlab-credentials
           ssh-key: ${{ secrets.CONFIG_REPO_PEM_KEY }}
