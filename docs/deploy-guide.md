@@ -126,7 +126,8 @@ bash infra/scripts/deploy.sh
 | `MONGO_PASSWORD` | MongoDB 비밀번호 | 랜덤 문자열 |
 | `MONGO_PORT` | MongoDB 호스트 포트 | `27017` |
 | `MONGO_VOLUME_PATH` | MongoDB 데이터 경로 | `/home/ubuntu/bcsd-data/mongo` |
-| `SPICEDB_ENDPOINT` | SpiceDB gRPC 주소 | `spicedb:50051` |
+| `SPICEDB_HOST` | SpiceDB 호스트 | `spicedb` |
+| `SPICEDB_PORT` | SpiceDB gRPC 포트 | `50051` |
 | `SPICEDB_TOKEN` | SpiceDB 인증 토큰 | 랜덤 문자열 |
 | `DOMAIN` | API 도메인 | `api.bcsdlab.com` |
 | `N8N_DOMAIN` | n8n 도메인 (선택) | `n8n.bcsdlab.com` |

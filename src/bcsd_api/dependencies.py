@@ -41,7 +41,8 @@ def _create_authz(endpoint: str, token: str) -> AuthzClient:
 
 
 def get_authz(settings: Settings = Depends(get_settings)) -> AuthzClient:
-    return _create_authz(settings.spicedb_endpoint, settings.spicedb_token)
+    endpoint = f"{settings.spicedb_host}:{settings.spicedb_port}"
+    return _create_authz(endpoint, settings.spicedb_token)
 
 
 def get_member_repo(sheets: SheetsClient = Depends(get_sheets)) -> MemberRepository:

@@ -13,7 +13,8 @@ class Settings(BaseSettings):
     cors_origins: str = "http://localhost:3000"
     cookie_name: str = "access_token"
     cookie_secure: bool = True
-    spicedb_endpoint: str = "spicedb:50051"
+    spicedb_host: str = "spicedb"
+    spicedb_port: int = 50051
     spicedb_token: str = ""
     slack_bot_token: str = ""
     slack_error_channel: str = ""
