@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-COMPOSE="docker compose --env-file .env -f infra/docker/docker-compose.yml"
-COMPOSE_DB="docker compose --env-file .env -f infra/docker/docker-compose.db.yml"
+COMPOSE="sudo docker compose --env-file .env -f infra/docker/docker-compose.yml"
+COMPOSE_DB="sudo docker compose --env-file .env -f infra/docker/docker-compose.db.yml"
 NGINX_CONF="infra/docker/nginx.conf"
 HEALTH_PATH="/openapi.json"
 MAX_RETRIES=10
