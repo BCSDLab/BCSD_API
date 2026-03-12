@@ -511,5 +511,8 @@ $RECYCLE.BIN/
 !package.json
 !tsconfig.json
 
+# Generated nginx conf (envsubst output from .template)
+infra/nginx/bcsd-api.conf
+
 # End of https://www.toptal.com/developers/gitignore/api/intellij+all,pycharm+all,visualstudiocode,python,pythonvanilla,macos,windows,linux,git,jetbrains+all
 

@@ -3,14 +3,16 @@ set -euo pipefail
 
 COMPOSE="sudo docker compose -p bcsd-app --env-file .env -f infra/docker/docker-compose.yml"
 COMPOSE_DB="sudo docker compose -p bcsd-db --env-file .env -f infra/docker/docker-compose.db.yml"
+NGINX_TEMPLATE="infra/nginx/bcsd-api.conf.template"
 NGINX_CONF="infra/nginx/bcsd-api.conf"
 NGINX_AVAILABLE="/etc/nginx/sites-available/bcsd-api.conf"
 NGINX_ENABLED="/etc/nginx/sites-enabled/bcsd-api.conf"
 HEALTH_PATH="/openapi.json"
 MAX_RETRIES=10
+ENVSUBST_VARS='${API_BLUE_PORT} ${API_GREEN_PORT} ${N8N_PORT} ${FRONTEND_PORT} ${DOMAIN} ${N8N_DOMAIN} ${FRONTEND_DOMAIN}'
 
 current_slot() {
-    grep proxy_pass "$NGINX_CONF" | grep -q "api_blue" && echo "blue" || echo "green"
+    grep proxy_pass "$NGINX_CONF" 2>/dev/null | grep -q "api_blue" && echo "blue" || echo "green"
 }
 
 next_slot() {
@@ -49,12 +51,19 @@ check_credentials() {
     fi
 }
 
+render_nginx() {
+    set -a; source .env; set +a
+    envsubst "$ENVSUBST_VARS" < "$NGINX_TEMPLATE" > "$NGINX_CONF"
+}
+
 echo "=== BCSD API Blue-Green Deploy ==="
 
 check_credentials
 
 echo "0. Ensuring DB services..."
 $COMPOSE_DB up -d
+
+render_nginx
 
 CURRENT=$(current_slot)
 NEXT=$(next_slot)
