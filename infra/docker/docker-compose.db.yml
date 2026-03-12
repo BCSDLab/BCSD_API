@@ -1,0 +1,80 @@
+services:
+  spicedb:
+    image: authzed/spicedb:latest
+    container_name: bcsd-spicedb
+    command: serve
+    restart: unless-stopped
+    ports:
+      - "${SPICEDB_PORT}:50051"
+    environment:
+      SPICEDB_GRPC_PRESHARED_KEY: "${SPICEDB_TOKEN}"
+      SPICEDB_DATASTORE_ENGINE: memory
+    healthcheck:
+      test: ["CMD", "grpc_health_probe", "-addr=localhost:50051"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - bcsd
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: bcsd-postgres
+    restart: unless-stopped
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    environment:
+      POSTGRES_USER: "${POSTGRES_USER}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+      POSTGRES_DB: "${POSTGRES_DB}"
+    volumes:
+      - ${POSTGRES_VOLUME_PATH}:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - bcsd
+
+  valkey:
+    image: valkey/valkey:8-alpine
+    container_name: bcsd-valkey
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT}:6379"
+    command: ["valkey-server", "--requirepass", "${REDIS_PASSWORD}"]
+    volumes:
+      - ${REDIS_VOLUME_PATH}:/data
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - bcsd
+
+  mongo:
+    image: mongo:7
+    container_name: bcsd-mongo
+    restart: unless-stopped
+    ports:
+      - "${MONGO_PORT}:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: "${MONGO_USER}"
+      MONGO_INITDB_ROOT_PASSWORD: "${MONGO_PASSWORD}"
+    command: ["mongod", "--auth", "--bind_ip_all"]
+    volumes:
+      - ${MONGO_VOLUME_PATH}/db:/data/db
+      - ${MONGO_VOLUME_PATH}/configdb:/data/configdb
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - bcsd
+
+networks:
+  bcsd:
+    name: bcsd

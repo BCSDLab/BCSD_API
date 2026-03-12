@@ -1,5 +1,4 @@
-import random
-import string
+import secrets
 import time
 from dataclasses import dataclass
 
@@ -22,7 +21,8 @@ _store: dict[str, _Pending] = {}
 
 
 def _generate_code() -> str:
-    return "".join(random.choices(string.digits, k=_CODE_LENGTH))
+    upper = 10 ** _CODE_LENGTH
+    return str(secrets.randbelow(upper)).zfill(_CODE_LENGTH)
 
 
 def send_code(email: str, sender: EmailSender) -> None:

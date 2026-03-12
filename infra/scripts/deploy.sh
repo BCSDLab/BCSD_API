@@ -1,0 +1,76 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+COMPOSE="docker compose -f infra/docker/docker-compose.yml"
+NGINX_CONF="infra/docker/nginx.conf"
+HEALTH_PATH="/openapi.json"
+MAX_RETRIES=10
+
+current_slot() {
+    grep proxy_pass "$NGINX_CONF" | grep -q "api_blue" && echo "blue" || echo "green"
+}
+
+next_slot() {
+    [ "$(current_slot)" = "blue" ] && echo "green" || echo "blue"
+}
+
+health_check() {
+    local container="api-${1}"
+    local retries=0
+    while [ $retries -lt $MAX_RETRIES ]; do
+        if $COMPOSE exec "$container" python -c \
+            "import urllib.request; urllib.request.urlopen('http://localhost:8000${HEALTH_PATH}')" \
+            > /dev/null 2>&1; then
+            return 0
+        fi
+        retries=$((retries + 1))
+        echo "  retry ${retries}/${MAX_RETRIES}..."
+        sleep 3
+    done
+    return 1
+}
+
+check_credentials() {
+    if [ ! -f .env ]; then
+        echo "FAIL: .env not found (CI/CD should have uploaded it)"
+        exit 1
+    fi
+    if [ ! -f credentials.json ]; then
+        echo "FAIL: credentials.json not found (CI/CD should have uploaded it)"
+        exit 1
+    fi
+}
+
+echo "=== BCSD API Blue-Green Deploy ==="
+
+check_credentials
+
+CURRENT=$(current_slot)
+NEXT=$(next_slot)
+
+echo "Current: $CURRENT → Deploying: $NEXT"
+
+echo "1. Building $NEXT..."
+$COMPOSE build "api-${NEXT}"
+
+echo "2. Starting $NEXT..."
+$COMPOSE up -d "api-${NEXT}"
+
+echo "3. Health check on api-${NEXT}..."
+if ! health_check "$NEXT"; then
+    echo "FAIL: $NEXT did not become healthy"
+    echo "--- Container logs ---"
+    $COMPOSE logs --tail=30 "api-${NEXT}"
+    echo "--- Stopping failed container ---"
+    $COMPOSE stop "api-${NEXT}"
+    exit 1
+fi
+
+echo "4. Switching nginx → $NEXT"
+sed -i "s/proxy_pass http:\/\/api_${CURRENT}/proxy_pass http:\/\/api_${NEXT}/" "$NGINX_CONF"
+$COMPOSE exec nginx nginx -s reload
+
+echo "5. Stopping old ($CURRENT)..."
+$COMPOSE stop "api-${CURRENT}"
+
+echo "=== Deploy complete: $NEXT is live ==="

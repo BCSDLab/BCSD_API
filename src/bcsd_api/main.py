@@ -40,8 +40,16 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
 
 
 def create_app() -> FastAPI:
-    app = FastAPI(title="BCSD API", version="0.1.0", lifespan=lifespan)
+    app = FastAPI(
+        title="BCSD API",
+        version="0.1.0",
+        lifespan=lifespan,
+        docs_url=None,
+        redoc_url=None,
+    )
     settings = get_settings()
+    from . import slack_log
+    slack_log.setup(settings.slack_bot_token, settings.slack_error_channel)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins.split(","),

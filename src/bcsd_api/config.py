@@ -3,7 +3,7 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     google_client_id: str = ""
-    jwt_secret: str = "change-me"
+    jwt_secret: str
     jwt_algorithm: str = "HS256"
     jwt_expire_minutes: int = 1440
     google_sheets_id: str = ""
@@ -12,7 +12,9 @@ class Settings(BaseSettings):
     resend_sender: str = "onboarding@resend.dev"
     cors_origins: str = "http://localhost:3000"
     cookie_name: str = "access_token"
-    cookie_secure: bool = False
+    cookie_secure: bool = True
     spicedb_endpoint: str = "spicedb:50051"
-    spicedb_token: str = "bcsd-dev-token"
-    model_config = {"env_file": ".env"}
+    spicedb_token: str = ""
+    slack_bot_token: str = ""
+    slack_error_channel: str = ""
+    model_config = {"env_file": ".env", "extra": "ignore"}

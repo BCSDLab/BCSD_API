@@ -45,7 +45,15 @@ def _filter_rows(rows: list[dict], filt: BaseFilter) -> list[dict]:
     return [row for row in rows if _row_matches(row, criteria, search)]
 
 
+def _valid_columns(rows: list[dict]) -> set[str]:
+    if not rows:
+        return set()
+    return set(rows[0].keys())
+
+
 def _sort_rows(rows: list[dict], filt: BaseFilter) -> list[dict]:
+    if filt.sort_by not in _valid_columns(rows):
+        return rows
     reverse = filt.sort_order == "desc"
     return sorted(rows, key=lambda r: r.get(filt.sort_by, ""), reverse=reverse)
 
