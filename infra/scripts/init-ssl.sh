@@ -5,7 +5,7 @@ if [ -f .env ]; then
     set -a; source .env; set +a
 fi
 
-COMPOSE="docker compose -f infra/docker/docker-compose.yml"
+COMPOSE="sudo docker compose --env-file .env -f infra/docker/docker-compose.yml"
 DOMAIN="${DOMAIN:?Set DOMAIN in .env}"
 N8N_DOMAIN="${N8N_DOMAIN}"
 FRONTEND_DOMAIN="${FRONTEND_DOMAIN}"
