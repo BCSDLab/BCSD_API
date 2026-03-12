@@ -78,6 +78,7 @@ fi
 
 echo "4. Switching nginx → $NEXT"
 sed -i "s/proxy_pass http:\/\/api_${CURRENT}/proxy_pass http:\/\/api_${NEXT}/g" "$NGINX_CONF"
+sudo mkdir -p /var/www/certbot
 sudo cp "$NGINX_CONF" "$NGINX_DEST"
 sudo nginx -t && sudo nginx -s reload
 
