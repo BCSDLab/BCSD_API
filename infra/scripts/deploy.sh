@@ -35,8 +35,14 @@ check_credentials() {
         echo "FAIL: .env not found (CI/CD should have uploaded it)"
         exit 1
     fi
-    if [ ! -f credentials.json ]; then
-        echo "FAIL: credentials.json not found (CI/CD should have uploaded it)"
+    local sa_file
+    sa_file=$(grep -m1 '^GOOGLE_SERVICE_ACCOUNT_FILE=' .env | cut -d= -f2-)
+    if [ -z "$sa_file" ]; then
+        echo "FAIL: GOOGLE_SERVICE_ACCOUNT_FILE not set in .env"
+        exit 1
+    fi
+    if [ ! -f "$sa_file" ]; then
+        echo "FAIL: $sa_file not found (CI/CD should have uploaded it)"
         exit 1
     fi
 }

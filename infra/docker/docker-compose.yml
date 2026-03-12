@@ -7,7 +7,7 @@ services:
     env_file:
       - ../../.env
     volumes:
-      - ../../credentials.json:/app/credentials.json:ro
+      - ../../${GOOGLE_SERVICE_ACCOUNT_FILE}:/app/${GOOGLE_SERVICE_ACCOUNT_FILE}:ro
     expose:
       - "8000"
     command: ["uvicorn", "bcsd_api.main:app", "--host", "0.0.0.0", "--port", "8000", "--timeout-graceful-shutdown", "${GRACEFUL_TIMEOUT}"]
