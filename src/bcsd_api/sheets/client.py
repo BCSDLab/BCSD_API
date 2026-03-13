@@ -58,3 +58,21 @@ class SheetsClient:
         headers = worksheet.row_values(1)
         col_idx = headers.index(target_col) + 1
         worksheet.update_cell(idx + 2, col_idx, new_value)
+
+    def delete_row(self, sheet_name: str, column: str, value: str) -> None:
+        worksheet = self._spreadsheet.worksheet(sheet_name)
+        records = worksheet.get_all_records()
+        idx = self._find_index(records, column, value)
+        if idx is None:
+            return
+        worksheet.delete_rows(idx + 2)
+
+    def delete_rows(self, sheet_name: str, column: str, value: str) -> None:
+        worksheet = self._spreadsheet.worksheet(sheet_name)
+        records = worksheet.get_all_records()
+        indices = []
+        for i, record in enumerate(records):
+            if self._matches(record, column, value):
+                indices.append(i + 2)
+        for row_num in reversed(indices):
+            worksheet.delete_rows(row_num)

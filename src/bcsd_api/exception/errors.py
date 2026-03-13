@@ -29,3 +29,9 @@ class Forbidden(AppException):
     status_code = 403
     error_code = "FORBIDDEN"
     message = "permission denied"
+
+
+class Gone(AppException):
+    status_code = 410
+    error_code = "GONE"
+    message = "resource is no longer available"

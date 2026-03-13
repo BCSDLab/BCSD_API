@@ -10,6 +10,9 @@ from .auth.router import router as auth_router
 from .dependencies import get_authz, get_settings, get_sheets
 from .exception import register_handlers
 from .member.router import router as member_router
+from .qr.router import router as qr_router
+from .redirect import router as redirect_router
+from .shorten.router import router as shorten_router
 from .track import router as track_router
 
 logger = logging.getLogger(__name__)
@@ -61,6 +64,9 @@ def create_app() -> FastAPI:
     app.include_router(auth_router)
     app.include_router(member_router)
     app.include_router(track_router)
+    app.include_router(shorten_router)
+    app.include_router(qr_router)
+    app.include_router(redirect_router)
     return app
 
 
