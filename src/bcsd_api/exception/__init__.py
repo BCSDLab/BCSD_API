@@ -1,5 +1,5 @@
 from .base import AppException
-from .errors import BadRequest, Conflict, Forbidden, NotFound, Unauthorized
+from .errors import BadRequest, Conflict, Forbidden, Gone, NotFound, Unauthorized
 from .handlers import register_handlers
 
 __all__ = [
@@ -7,6 +7,7 @@ __all__ = [
     "BadRequest",
     "Conflict",
     "Forbidden",
+    "Gone",
     "NotFound",
     "Unauthorized",
     "register_handlers",

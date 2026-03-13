@@ -44,7 +44,7 @@ n8n (automation workflows) → Google Sheets (database) → Slack/Email (output)
 - **Fee model**: Payment-logging (rows exist ONLY when money received, NOT invoice model)
 - **No `due_date` column** in fees - due dates are implicit (first Monday of each month)
 - **Payment status**: Unpaid → Paid (on payment), Paid → Unpaid (semester reset), → Exempt (Mentor promotion)
-- **Member status**: Beginner → Regular → Mentor → Alumni
+- **Member status**: Beginner → Regular → Mentor
 - **Reminders**: Weekly on Mondays at 9am KST (`0 9 * * 1`)
 - **Foreign keys**: Store member ID (not email) in fees.member_id; lookups done by email
 

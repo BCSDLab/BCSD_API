@@ -10,6 +10,7 @@ from .email.sender import EmailSender
 from .exception import Unauthorized
 from .member.repository import MemberRepository
 from .sheets.client import SheetsClient
+from .shorten.repository import LinkRepository
 
 
 @lru_cache
@@ -47,6 +48,10 @@ def get_authz(settings: Settings = Depends(get_settings)) -> AuthzClient:
 
 def get_member_repo(sheets: SheetsClient = Depends(get_sheets)) -> MemberRepository:
     return MemberRepository(sheets)
+
+
+def get_link_repo(sheets: SheetsClient = Depends(get_sheets)) -> LinkRepository:
+    return LinkRepository(sheets)
 
 
 def _extract_token(request: Request, settings: Settings) -> str:
