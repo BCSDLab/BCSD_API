@@ -17,7 +17,6 @@ dependencies = [
 
     "resend>=2.0.0",
     "authzed>=1.0.0",
-    "qrcode[pil]>=8.0",
 ]
 
 [project.optional-dependencies]
