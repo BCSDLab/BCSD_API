@@ -11,7 +11,7 @@ class BaseFilter(BaseModel):
     sort_by: str = "id"
     sort_order: str = Field("asc", pattern="^(asc|desc)$")
 
-    search_fields: list[str] = Field(default_factory=list, exclude=True)
+    search_fields: list[str] = Field(default=[], exclude=True)
 
     def filters(self) -> dict:
         excluded = {"page", "size", "sort_by", "sort_order", "search_fields"}
