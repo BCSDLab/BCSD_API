@@ -42,12 +42,12 @@ import_workflow() {
 activate_workflow() {
     local name="$1"
     local wf_id
-    wf_id=$($COMPOSE exec -T n8n n8n list:workflow 2>/dev/null | grep "$name" | awk '{print $1}')
+    wf_id=$($COMPOSE exec -T n8n n8n list:workflow 2>/dev/null | grep "$name" | awk -F'|' '{print $1}')
     if [ -z "$wf_id" ]; then
         echo "  WARNING: Could not find workflow '$name' to activate"
         return 1
     fi
-    $COMPOSE exec -T n8n n8n update:workflow --id="$wf_id" --active=true
+    $COMPOSE exec -T n8n n8n publish:workflow --id="$wf_id"
     echo "  Activated '$name' (id: $wf_id)"
 }
 
