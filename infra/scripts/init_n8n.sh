@@ -115,7 +115,7 @@ setup_pg_credential
 
 echo "5. Importing workflows..."
 import_workflow "/workflows/pg_sheets_sync.json" "PG → Sheets Sync (5min)"
-import_workflow "/workflows/link_auto_expire.json" "Link Auto-Expiration (hourly)"
+import_workflow "/workflows/link_auto_expire.json" "Link Auto-Expiration (1min)"
 
 echo "=== n8n Init complete ==="
 echo "NOTE: Set up Google Sheets credential in n8n UI if first deploy"

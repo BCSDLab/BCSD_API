@@ -1,14 +1,14 @@
 {
-  "name": "Link Auto-Expiration (hourly)",
+  "name": "Link Auto-Expiration (1min)",
   "nodes": [
     {
       "parameters": {
         "rule": {
-          "interval": [{"field": "hours", "hoursInterval": 1}]
+          "interval": [{"field": "minutes", "minutesInterval": 1}]
         }
       },
       "id": "schedule-trigger",
-      "name": "Every Hour",
+      "name": "Every Minute",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.3,
       "position": [0, 0]
@@ -60,7 +60,7 @@
     }
   ],
   "connections": {
-    "Every Hour": {"main": [[{"node": "Expire Links", "type": "main", "index": 0}]]},
+    "Every Minute": {"main": [[{"node": "Expire Links", "type": "main", "index": 0}]]},
     "Expire Links": {"main": [[{"node": "Any Expired?", "type": "main", "index": 0}]]},
     "Any Expired?": {"main": [[{"node": "Format Message", "type": "main", "index": 0}], []]}
   },
