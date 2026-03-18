@@ -64,6 +64,7 @@ setup_credential() {
 import json, sys
 sa = json.load(open('$GOOGLE_SERVICE_ACCOUNT_FILE'))
 cred = [{
+    'id': '1',
     'name': 'Google Sheets SA',
     'type': 'googleApi',
     'data': {
