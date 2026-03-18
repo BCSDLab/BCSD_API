@@ -37,6 +37,7 @@ services:
       N8N_ENCRYPTION_KEY: "${N8N_ENCRYPTION_KEY}"
       SYNC_TOKEN: "${SYNC_TOKEN}"
       GOOGLE_SHEETS_ID: "${GOOGLE_SHEETS_ID}"
+      N8N_BLOCK_ENV_ACCESS_IN_NODE: "false"
     volumes:
       - n8n-data:/home/node/.n8n
       - ../../workflows:/workflows:ro
