@@ -511,6 +511,7 @@ $RECYCLE.BIN/
 !package.json
 !tsconfig.json
 !pyrightconfig.json
+!workflows/*.json
 
 # Generated nginx conf (envsubst output from .template)
 infra/nginx/bcsd-api.conf

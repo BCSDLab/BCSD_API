@@ -1,0 +1,169 @@
+{
+  "updatedAt": "2026-03-18T08:15:30.841Z",
+  "createdAt": "2026-03-18T08:15:30.841Z",
+  "id": "2l61yZDI6guFiOqj",
+  "name": "Link Auto-Expiration (hourly)",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 1
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Every Hour",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://api:8000/v1/internal/expire-links",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Sync-Token",
+              "value": "={{ $env.SYNC_TOKEN }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "http-expire",
+      "name": "POST /expire-links",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "check-expired",
+              "leftValue": "={{ $json.expired_count }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-expired",
+      "name": "Any Expired?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        440,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const count = $input.first().json.expired_count;\nreturn [{ json: { text: `🔗 Link Auto-Expiration: ${count} link(s) expired` } }];"
+      },
+      "id": "format-message",
+      "name": "Format Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        -100
+      ]
+    }
+  ],
+  "connections": {
+    "Every Hour": {
+      "main": [
+        [
+          {
+            "node": "POST /expire-links",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "POST /expire-links": {
+      "main": [
+        [
+          {
+            "node": "Any Expired?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Any Expired?": {
+      "main": [
+        [
+          {
+            "node": "Format Message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": null,
+  "versionId": "93635fd3-18c2-4825-a349-71df3d4de8dc",
+  "activeVersionId": null,
+  "versionCounter": 1,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-03-18T08:15:30.845Z",
+      "createdAt": "2026-03-18T08:15:30.845Z",
+      "role": "workflow:owner",
+      "workflowId": "2l61yZDI6guFiOqj",
+      "projectId": "6l2Bf1Rjipb828W0",
+      "project": {
+        "updatedAt": "2026-03-17T15:58:53.046Z",
+        "createdAt": "2026-03-17T15:54:09.247Z",
+        "id": "6l2Bf1Rjipb828W0",
+        "name": "BCSD Admin <admin@bcsdlab.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "be9d47af-e0f4-4b52-8b9a-60cdc351998a"
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": null
+}

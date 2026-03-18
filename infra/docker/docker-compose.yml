@@ -13,7 +13,9 @@ services:
     command: ["uvicorn", "bcsd_api.main:app", "--host", "0.0.0.0", "--port", "8000", "--timeout-graceful-shutdown", "${GRACEFUL_TIMEOUT}"]
     stop_grace_period: ${GRACEFUL_TIMEOUT}s
     networks:
-      - bcsd
+      bcsd:
+        aliases:
+          - api
 
   api-green:
     <<: *api
@@ -33,8 +35,12 @@ services:
       N8N_BASIC_AUTH_USER: "${N8N_AUTH_USER}"
       N8N_BASIC_AUTH_PASSWORD: "${N8N_AUTH_PASSWORD}"
       N8N_ENCRYPTION_KEY: "${N8N_ENCRYPTION_KEY}"
+      SYNC_TOKEN: "${SYNC_TOKEN}"
+      GOOGLE_SHEETS_ID: "${GOOGLE_SHEETS_ID}"
     volumes:
       - n8n-data:/home/node/.n8n
+      - ../../workflows:/workflows:ro
+      - ../../${GOOGLE_SERVICE_ACCOUNT_FILE}:/credentials/sa.json:ro
     networks:
       - bcsd
 

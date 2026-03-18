@@ -1,5 +1,6 @@
 import logging
 
+from sqlalchemy import text
 from sqlalchemy.dialects.postgresql import insert
 
 from bcsd_api.config import Settings
@@ -52,6 +53,11 @@ def _seed_table(conn, sheets: SheetsClient, name: str) -> int:
     return len(cleaned)
 
 
+def _is_empty(conn) -> bool:
+    row = conn.execute(text("SELECT count(*) FROM members"))
+    return row.scalar() == 0
+
+
 def run_seed() -> None:
     settings = Settings()
     sheets = SheetsClient(
@@ -68,6 +74,19 @@ def run_seed() -> None:
     logger.info("Seed complete")
 
 
+def run_seed_if_empty() -> None:
+    settings = Settings()
+    engine = create_engine(settings.database_url)
+    with engine.connect() as conn:
+        if not _is_empty(conn):
+            logger.info("Tables not empty — skipping seed")
+            engine.dispose()
+            return
+    engine.dispose()
+    logger.info("Tables empty — running seed")
+    run_seed()
+
+
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
-    run_seed()
+    run_seed_if_empty()
