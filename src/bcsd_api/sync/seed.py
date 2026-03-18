@@ -1,6 +1,6 @@
 import logging
 
-from sqlalchemy import insert
+from sqlalchemy.dialects.postgresql import insert
 
 from bcsd_api.config import Settings
 from bcsd_api.database import create_engine

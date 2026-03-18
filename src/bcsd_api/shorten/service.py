@@ -7,10 +7,10 @@ from bcsd_api.exception import Conflict, Gone, NotFound
 from bcsd_api.filter.base import PagedResponse, apply_filter
 from bcsd_api.filter.links import LinkFilter
 from bcsd_api.id_gen import generate_id
-from bcsd_api.member.repository import MemberRepository
+from bcsd_api.member.pg_repository import PgMemberRepository as MemberRepository
 from bcsd_api.timezone import KST
 
-from .repository import LinkRepository
+from .pg_repository import PgLinkRepository as LinkRepository
 from .schema import (
     CreateRequest,
     CreatorOption,

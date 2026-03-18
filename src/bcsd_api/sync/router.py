@@ -49,9 +49,9 @@ def dump_table(
     x_sync_token: str = Header(...),
 ) -> list[dict]:
     _verify_token(x_sync_token, settings.sync_token)
-    table = _TABLES.get(table_name)
-    if not table:
+    if table_name not in _TABLES:
         raise NotFound(f"table '{table_name}' not found")
+    table = _TABLES[table_name]
     rows = conn.execute(select(table))
     return [row._asdict() for row in rows]
 
