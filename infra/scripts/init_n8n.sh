@@ -52,7 +52,6 @@ activate_workflow() {
 }
 
 setup_credential() {
-    local sa_path="/credentials/sa.json"
     local existing
     existing=$($COMPOSE exec -T n8n n8n list:credential 2>/dev/null | grep -c "Google Sheets SA" || true)
     if [ "$existing" -gt 0 ]; then
@@ -60,17 +59,22 @@ setup_credential() {
         return 0
     fi
     echo "  Creating Google Sheets service account credential..."
-    $COMPOSE exec -T n8n n8n import:credentials --input=/dev/stdin <<CRED_EOF
-[{
-  "name": "Google Sheets SA",
-  "type": "googleApi",
-  "data": {
-    "email": "$(grep client_email "$GOOGLE_SERVICE_ACCOUNT_FILE" | cut -d'"' -f4)",
-    "privateKey": "$(grep private_key "$GOOGLE_SERVICE_ACCOUNT_FILE" | cut -d'"' -f4)",
-    "impersonateUser": ""
-  }
+    local cred_json
+    cred_json=$(python3 -c "
+import json, sys
+sa = json.load(open('$GOOGLE_SERVICE_ACCOUNT_FILE'))
+cred = [{
+    'name': 'Google Sheets SA',
+    'type': 'googleApi',
+    'data': {
+        'email': sa['client_email'],
+        'privateKey': sa['private_key'],
+        'impersonateUser': ''
+    }
 }]
-CRED_EOF
+json.dump(cred, sys.stdout)
+")
+    echo "$cred_json" | $COMPOSE exec -T n8n n8n import:credentials --input=/dev/stdin
 }
 
 echo "=== n8n Init ==="
