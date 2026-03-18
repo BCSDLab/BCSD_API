@@ -53,9 +53,9 @@ activate_workflow() {
 
 setup_credential() {
     local existing
-    existing=$($COMPOSE exec -T n8n n8n list:credential 2>/dev/null | grep -c "Google Sheets SA" || true)
+    existing=$($COMPOSE exec -T n8n n8n list:credential 2>&1 | grep -c "Google Sheets SA" || true)
     if [ "$existing" -gt 0 ]; then
-        echo "  Google Sheets credential already exists — skipping"
+        echo "  Google Sheets credential already exists ($existing found) — skipping"
         return 0
     fi
     echo "  Creating Google Sheets service account credential..."
