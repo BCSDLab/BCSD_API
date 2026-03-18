@@ -1,0 +1,103 @@
+from sqlalchemy import Column, ForeignKey, Integer, String, Table, Text
+
+from .database import metadata
+
+members = Table(
+    "members", metadata,
+    Column("id", String, primary_key=True),
+    Column("name", String, nullable=False),
+    Column("email", String, nullable=False, unique=True),
+    Column("department", String),
+    Column("student_id", String),
+    Column("school_email", String),
+    Column("phone", String),
+    Column("status", String, nullable=False, server_default="Beginner"),
+    Column("track", String),
+    Column("team", String),
+    Column("role", String),
+    Column("join_date", String),
+    Column("payment_status", String, server_default="Unpaid"),
+    Column("last_updated", String),
+)
+
+fees = Table(
+    "fees", metadata,
+    Column("id", String, primary_key=True),
+    Column("member_id", String, ForeignKey("members.id")),
+    Column("amount", Integer),
+    Column("paid_date", String),
+    Column("payment_method", String),
+    Column("notes", Text),
+    Column("semester", String),
+    Column("last_updated", String),
+)
+
+groups = Table(
+    "groups", metadata,
+    Column("id", String, primary_key=True),
+    Column("name", String),
+    Column("type", String),
+    Column("parent_id", String),
+    Column("size", Integer),
+    Column("leader_email", String),
+    Column("last_updated", String),
+)
+
+events = Table(
+    "events", metadata,
+    Column("id", String, primary_key=True),
+    Column("title", String),
+    Column("date", String),
+    Column("type", String),
+    Column("organizer", String),
+    Column("attendees", Text),
+    Column("notes", Text),
+)
+
+workflow_logs = Table(
+    "workflow_logs", metadata,
+    Column("timestamp", String, primary_key=True),
+    Column("workflow_name", String, primary_key=True),
+    Column("status", String),
+    Column("input_data", Text),
+    Column("output_data", Text),
+    Column("error_message", Text),
+)
+
+links = Table(
+    "links", metadata,
+    Column("id", String, primary_key=True),
+    Column("code", String, nullable=False, unique=True),
+    Column("title", String, nullable=False),
+    Column("description", Text),
+    Column("url", Text, nullable=False),
+    Column("creator_id", String, ForeignKey("members.id")),
+    Column("created_at", String),
+    Column("expires_at", String),
+    Column("expired_at", String),
+    Column("updated_at", String),
+)
+
+link_clicks = Table(
+    "link_clicks", metadata,
+    Column("id", String, primary_key=True),
+    Column("link_id", String, ForeignKey("links.id", ondelete="CASCADE")),
+    Column("clicked_at", String),
+    Column("referer", Text),
+    Column("user_agent", Text),
+)
+
+tracks = Table(
+    "tracks", metadata,
+    Column("name", String, primary_key=True),
+)
+
+statuses = Table(
+    "statuses", metadata,
+    Column("name", String, primary_key=True),
+)
+
+payment_statuses = Table(
+    "payment_statuses", metadata,
+    Column("name", String, primary_key=True),
+)

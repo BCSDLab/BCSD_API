@@ -7,11 +7,12 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .auth.router import router as auth_router
-from .dependencies import get_authz, get_settings, get_sheets
+from .dependencies import get_authz, get_settings
 from .exception import register_handlers
 from .member.router import router as member_router
 from .redirect import router as redirect_router
 from .shorten.router import router as shorten_router
+from .sync.router import router as sync_router
 from .track import router as track_router
 
 logger = logging.getLogger(__name__)
@@ -31,14 +32,24 @@ def _init_spicedb(settings) -> None:
 @asynccontextmanager
 async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     settings = get_settings()
-    sheets = get_sheets(settings)
-    from .sheets.migrate import run as run_migrations
-    run_migrations(sheets.spreadsheet)
+    _init_pg(settings)
     try:
         _init_spicedb(settings)
     except Exception:
         logger.warning("SpiceDB unavailable, skipping schema init")
     yield
+
+
+def _init_pg(settings) -> None:
+    from sqlalchemy import text
+
+    from .database import create_engine
+
+    engine = create_engine(settings.database_url)
+    with engine.connect() as conn:
+        conn.execute(text("SELECT 1"))
+    engine.dispose()
+    logger.info("PostgreSQL connected")
 
 
 def create_app() -> FastAPI:
@@ -64,6 +75,7 @@ def create_app() -> FastAPI:
     app.include_router(member_router)
     app.include_router(track_router)
     app.include_router(shorten_router)
+    app.include_router(sync_router)
     app.include_router(redirect_router)
     return app
 

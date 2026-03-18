@@ -17,6 +17,9 @@ dependencies = [
 
     "resend>=2.0.0",
     "authzed>=1.0.0",
+    "sqlalchemy>=2.0",
+    "psycopg[binary]>=3.1",
+    "alembic>=1.13",
 ]
 
 [project.optional-dependencies]

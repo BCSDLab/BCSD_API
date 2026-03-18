@@ -1,21 +1,34 @@
+from collections.abc import Iterator
 from functools import lru_cache
 
 from fastapi import Depends, Request
+from sqlalchemy import Connection
 
 from .auth import token as jwt_token
 from .authz.client import AuthzClient
 from .config import Settings
+from .database import create_engine, get_connection
 from .email import ResendSender
 from .email.sender import EmailSender
 from .exception import Unauthorized
-from .member.repository import MemberRepository
+from .member.pg_repository import PgMemberRepository
 from .sheets.client import SheetsClient
-from .shorten.repository import LinkRepository
+from .shorten.pg_repository import PgLinkRepository
 
 
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
+
+
+@lru_cache
+def _make_engine(database_url: str):
+    return create_engine(database_url)
+
+
+def get_conn(settings: Settings = Depends(get_settings)) -> Iterator[Connection]:
+    engine = _make_engine(settings.database_url)
+    yield from get_connection(engine)
 
 
 @lru_cache
@@ -46,12 +59,12 @@ def get_authz(settings: Settings = Depends(get_settings)) -> AuthzClient:
     return _create_authz(endpoint, settings.spicedb_token)
 
 
-def get_member_repo(sheets: SheetsClient = Depends(get_sheets)) -> MemberRepository:
-    return MemberRepository(sheets)
+def get_member_repo(conn: Connection = Depends(get_conn)) -> PgMemberRepository:
+    return PgMemberRepository(conn)
 
 
-def get_link_repo(sheets: SheetsClient = Depends(get_sheets)) -> LinkRepository:
-    return LinkRepository(sheets)
+def get_link_repo(conn: Connection = Depends(get_conn)) -> PgLinkRepository:
+    return PgLinkRepository(conn)
 
 
 def _extract_token(request: Request, settings: Settings) -> str:

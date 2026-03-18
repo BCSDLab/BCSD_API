@@ -18,4 +18,17 @@ class Settings(BaseSettings):
     spicedb_token: str = ""
     slack_bot_token: str = ""
     slack_error_channel: str = ""
+    postgres_user: str = "bcsd"
+    postgres_password: str = ""
+    postgres_db: str = "bcsd"
+    postgres_host: str = "postgres"
+    postgres_port: int = 5432
+    sync_token: str = ""
     model_config = {"env_file": ".env", "extra": "ignore"}
+
+    @property
+    def database_url(self) -> str:
+        return (
+            f"postgresql+psycopg://{self.postgres_user}:{self.postgres_password}"
+            f"@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"
+        )

@@ -1,12 +1,12 @@
 from fastapi import APIRouter, Depends
+from sqlalchemy import Connection
 
-from bcsd_api.dependencies import current_user, get_member_repo, get_sheets
+from bcsd_api.dependencies import current_user, get_conn, get_member_repo
 from bcsd_api.filter.base import PagedResponse
 from bcsd_api.filter.members import MemberFilter
-from bcsd_api.sheets.client import SheetsClient
 
 from . import service
-from .repository import MemberRepository
+from .pg_repository import PgMemberRepository
 from .schema import FiltersResponse, MemberDetail, MemberResponse
 
 router = APIRouter(prefix="/v1/members", tags=["members"])
@@ -14,16 +14,16 @@ router = APIRouter(prefix="/v1/members", tags=["members"])
 
 @router.get("/filters", response_model=FiltersResponse)
 def get_filters(
-    sheets: SheetsClient = Depends(get_sheets),
+    conn: Connection = Depends(get_conn),
 ) -> FiltersResponse:
-    return service.get_filters(sheets)
+    return service.get_filters(conn)
 
 
 @router.get("", response_model=PagedResponse[MemberResponse])
 def get_members(
     filt: MemberFilter = Depends(),
     _: dict = Depends(current_user),
-    repo: MemberRepository = Depends(get_member_repo),
+    repo: PgMemberRepository = Depends(get_member_repo),
 ) -> PagedResponse[MemberResponse]:
     return service.list_members(repo, filt)
 
@@ -32,6 +32,6 @@ def get_members(
 def get_member(
     member_id: str,
     _: dict = Depends(current_user),
-    repo: MemberRepository = Depends(get_member_repo),
+    repo: PgMemberRepository = Depends(get_member_repo),
 ) -> MemberDetail:
     return service.get_member(repo, member_id)
