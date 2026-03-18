@@ -23,7 +23,6 @@ class Settings(BaseSettings):
     postgres_db: str = "bcsd"
     postgres_host: str = "postgres"
     postgres_port: int = 5432
-    sync_token: str = ""
     model_config = {"env_file": ".env", "extra": "ignore"}
 
     @property

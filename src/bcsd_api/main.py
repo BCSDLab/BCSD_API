@@ -12,7 +12,6 @@ from .exception import register_handlers
 from .member.router import router as member_router
 from .redirect import router as redirect_router
 from .shorten.router import router as shorten_router
-from .sync.router import router as sync_router
 from .track import router as track_router
 
 logger = logging.getLogger(__name__)
@@ -75,7 +74,6 @@ def create_app() -> FastAPI:
     app.include_router(member_router)
     app.include_router(track_router)
     app.include_router(shorten_router)
-    app.include_router(sync_router)
     app.include_router(redirect_router)
     return app
 

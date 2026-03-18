@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# n8n workflow import + Google Sheets credential setup
-# Idempotent: skips if workflows already exist
+# n8n workflow import + owner setup
+# Idempotent: skips if already configured
+# Credentials (Postgres, Google Sheets) must be set up manually in n8n UI
 
 COMPOSE="sudo docker compose -p bcsd-app --env-file .env -f infra/docker/docker-compose.yml"
-N8N_CONTAINER="bcsd-app-n8n-1"
 MAX_RETRIES=15
 
 wait_n8n() {
@@ -24,7 +24,7 @@ wait_n8n() {
 workflow_exists() {
     local name="$1"
     local count
-    count=$($COMPOSE exec -T n8n n8n list:workflow 2>/dev/null | grep -c "$name" || true)
+    count=$($COMPOSE exec -T n8n n8n list:workflow 2>&1 | grep -c "$name" || true)
     [ "$count" -gt 0 ]
 }
 
@@ -37,45 +37,6 @@ import_workflow() {
     fi
     echo "  Importing '$name'..."
     $COMPOSE exec -T n8n n8n import:workflow --input="$file"
-}
-
-activate_workflow() {
-    local name="$1"
-    local wf_id
-    wf_id=$($COMPOSE exec -T n8n n8n list:workflow 2>/dev/null | grep "$name" | awk -F'|' '{print $1}')
-    if [ -z "$wf_id" ]; then
-        echo "  WARNING: Could not find workflow '$name' to activate"
-        return 1
-    fi
-    $COMPOSE exec -T n8n n8n publish:workflow --id="$wf_id"
-    echo "  Activated '$name' (id: $wf_id)"
-}
-
-setup_credential() {
-    local existing
-    existing=$($COMPOSE exec -T n8n n8n list:credential 2>&1 | grep -c "Google Sheets SA" || true)
-    if [ "$existing" -gt 0 ]; then
-        echo "  Google Sheets credential already exists ($existing found) — skipping"
-        return 0
-    fi
-    echo "  Creating Google Sheets service account credential..."
-    local cred_json
-    cred_json=$(python3 -c "
-import json, sys
-sa = json.load(open('$GOOGLE_SERVICE_ACCOUNT_FILE'))
-cred = [{
-    'id': str(__import__('uuid').uuid4()),
-    'name': 'Google Sheets SA',
-    'type': 'googleApi',
-    'data': {
-        'email': sa['client_email'],
-        'privateKey': sa['private_key'],
-        'impersonateUser': ''
-    }
-}]
-json.dump(cred, sys.stdout)
-")
-    echo "$cred_json" | $COMPOSE exec -T n8n n8n import:credentials --input=/dev/stdin
 }
 
 setup_owner() {
@@ -123,12 +84,5 @@ echo "4. Importing workflows..."
 import_workflow "/workflows/pg_sheets_sync.json" "PG → Sheets Sync (5min)"
 import_workflow "/workflows/link_auto_expire.json" "Link Auto-Expiration (hourly)"
 
-echo "5. Setting up Google Sheets credential..."
-set -a; source .env; set +a
-setup_credential
-
-echo "6. Activating workflows..."
-activate_workflow "PG → Sheets Sync"
-activate_workflow "Link Auto-Expiration"
-
 echo "=== n8n Init complete ==="
+echo "NOTE: Set up Postgres + Google Sheets credentials in n8n UI if first deploy"

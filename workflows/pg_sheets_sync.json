@@ -1,292 +1,91 @@
 {
-  "updatedAt": "2026-03-18T07:45:33.498Z",
-  "createdAt": "2026-03-18T07:45:33.498Z",
-  "id": "wez9b95FkFe5Wksi",
   "name": "PG → Sheets Sync (5min)",
-  "description": null,
-  "active": false,
-  "isArchived": false,
   "nodes": [
     {
       "parameters": {
         "rule": {
-          "interval": [
-            {
-              "field": "minutes",
-              "minutesInterval": 5
-            }
-          ]
+          "interval": [{"field": "minutes", "minutesInterval": 5}]
         }
       },
       "id": "schedule-trigger",
       "name": "Every 5 Minutes",
       "type": "n8n-nodes-base.scheduleTrigger",
-      "typeVersion": 1.2,
-      "position": [
-        0,
-        0
-      ]
+      "typeVersion": 1.3,
+      "position": [0, 0]
     },
     {
       "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "tables",
-              "name": "tables",
-              "value": "=[\"members\",\"fees\",\"groups\",\"events\",\"workflow_logs\",\"links\",\"link_clicks\",\"tracks\",\"statuses\",\"payment_statuses\"]",
-              "type": "array"
-            }
-          ]
-        }
-      },
-      "id": "set-tables",
-      "name": "Set Table List",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        220,
-        0
-      ]
-    },
-    {
-      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE' ORDER BY table_name",
         "options": {}
       },
+      "id": "pg-list-tables",
+      "name": "List PG Tables",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [220, 0],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {"options": {}},
       "id": "split-batches",
       "name": "Loop Over Tables",
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 3,
-      "position": [
-        440,
-        0
-      ]
+      "position": [440, 0]
     },
     {
       "parameters": {
-        "jsCode": "const tables = $input.first().json.tables;\nconst currentIndex = $input.first().json.$index || 0;\nreturn [{ json: { tableName: tables[currentIndex], tables: tables, $index: currentIndex } }];"
+        "operation": "executeQuery",
+        "query": "=SELECT * FROM {{ $json.table_name }}",
+        "options": {}
       },
-      "id": "get-current-table",
-      "name": "Get Current Table",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        660,
-        0
-      ]
-    },
-    {
-      "parameters": {
-        "url": "=http://api:8000/v1/internal/dump/{{ $json.tableName }}",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "X-Sync-Token",
-              "value": "={{ $env.SYNC_TOKEN }}"
-            }
-          ]
-        },
-        "options": {
-          "response": {
-            "response": {
-              "fullResponse": false
-            }
-          }
-        }
-      },
-      "id": "http-dump",
-      "name": "GET /dump/{table}",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        880,
-        0
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "// Transform API response to Google Sheets format\nconst items = $input.all().map(item => item.json);\nif (items.length === 0) return [];\n\nreturn items.map(row => ({ json: row }));"
-      },
-      "id": "transform-for-sheets",
-      "name": "Transform Data",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        1100,
-        0
-      ]
+      "id": "pg-dump-table",
+      "name": "Dump Table",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [660, 0],
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
         "operation": "clear",
-        "documentId": {
-          "__rl": true,
-          "mode": "id",
-          "value": "={{ $env.GOOGLE_SHEETS_ID }}"
-        },
-        "sheetName": {
-          "__rl": true,
-          "mode": "name",
-          "value": "={{ $('Get Current Table').item.json.tableName }}"
-        }
+        "documentId": {"__rl": true, "mode": "id", "value": "={{ $env.GOOGLE_SHEETS_ID }}"},
+        "sheetName": {"__rl": true, "mode": "name", "value": "={{ $('Loop Over Tables').item.json.table_name }}"}
       },
       "id": "sheets-clear",
       "name": "Clear Sheet",
       "type": "n8n-nodes-base.googleSheets",
-      "typeVersion": 4.5,
-      "position": [
-        1320,
-        0
-      ]
+      "typeVersion": 4.7,
+      "position": [880, 0],
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
         "operation": "append",
-        "documentId": {
-          "__rl": true,
-          "mode": "id",
-          "value": "={{ $env.GOOGLE_SHEETS_ID }}"
-        },
-        "sheetName": {
-          "__rl": true,
-          "mode": "name",
-          "value": "={{ $('Get Current Table').item.json.tableName }}"
+        "documentId": {"__rl": true, "mode": "id", "value": "={{ $env.GOOGLE_SHEETS_ID }}"},
+        "sheetName": {"__rl": true, "mode": "name", "value": "={{ $('Loop Over Tables').item.json.table_name }}"},
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {}
         },
         "options": {}
       },
       "id": "sheets-append",
       "name": "Write to Sheet",
       "type": "n8n-nodes-base.googleSheets",
-      "typeVersion": 4.5,
-      "position": [
-        1540,
-        0
-      ]
+      "typeVersion": 4.7,
+      "position": [1100, 0],
+      "onError": "continueRegularOutput"
     }
   ],
   "connections": {
-    "Every 5 Minutes": {
-      "main": [
-        [
-          {
-            "node": "Set Table List",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Set Table List": {
-      "main": [
-        [
-          {
-            "node": "Loop Over Tables",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Loop Over Tables": {
-      "main": [
-        [],
-        [
-          {
-            "node": "Get Current Table",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Get Current Table": {
-      "main": [
-        [
-          {
-            "node": "GET /dump/{table}",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "GET /dump/{table}": {
-      "main": [
-        [
-          {
-            "node": "Transform Data",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Transform Data": {
-      "main": [
-        [
-          {
-            "node": "Clear Sheet",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Clear Sheet": {
-      "main": [
-        [
-          {
-            "node": "Write to Sheet",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Write to Sheet": {
-      "main": [
-        [
-          {
-            "node": "Loop Over Tables",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    }
+    "Every 5 Minutes": {"main": [[{"node": "List PG Tables", "type": "main", "index": 0}]]},
+    "List PG Tables": {"main": [[{"node": "Loop Over Tables", "type": "main", "index": 0}]]},
+    "Loop Over Tables": {"main": [[], [{"node": "Dump Table", "type": "main", "index": 0}]]},
+    "Dump Table": {"main": [[{"node": "Clear Sheet", "type": "main", "index": 0}]]},
+    "Clear Sheet": {"main": [[{"node": "Write to Sheet", "type": "main", "index": 0}]]},
+    "Write to Sheet": {"main": [[{"node": "Loop Over Tables", "type": "main", "index": 0}]]}
   },
-  "settings": {
-    "executionOrder": "v1",
-    "callerPolicy": "workflowsFromSameOwner",
-    "availableInMCP": false
-  },
-  "staticData": null,
-  "meta": null,
-  "pinData": null,
-  "versionId": "47b2a13c-775d-461b-893f-6a0a9fc7078b",
-  "activeVersionId": null,
-  "versionCounter": 1,
-  "triggerCount": 0,
-  "shared": [
-    {
-      "updatedAt": "2026-03-18T07:45:33.502Z",
-      "createdAt": "2026-03-18T07:45:33.502Z",
-      "role": "workflow:owner",
-      "workflowId": "wez9b95FkFe5Wksi",
-      "projectId": "6l2Bf1Rjipb828W0",
-      "project": {
-        "updatedAt": "2026-03-17T15:58:53.046Z",
-        "createdAt": "2026-03-17T15:54:09.247Z",
-        "id": "6l2Bf1Rjipb828W0",
-        "name": "BCSD Admin <admin@bcsdlab.com>",
-        "type": "personal",
-        "icon": null,
-        "description": null,
-        "creatorId": "be9d47af-e0f4-4b52-8b9a-60cdc351998a"
-      }
-    }
-  ],
-  "tags": [],
-  "activeVersion": null
+  "settings": {"executionOrder": "v1"}
 }
