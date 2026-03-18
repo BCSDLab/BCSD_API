@@ -90,5 +90,5 @@ def _base_fields(member_id: str, name: str, email: str) -> dict:
         "email": email,
         "status": "Beginner",
         "team": "",
-        "payment_status": "Unpaid",
+        "payment_status": "미납",
     }

@@ -78,6 +78,32 @@ json.dump(cred, sys.stdout)
     echo "$cred_json" | $COMPOSE exec -T n8n n8n import:credentials --input=/dev/stdin
 }
 
+setup_owner() {
+    set -a; source .env; set +a
+    local port
+    port=$(grep -m1 '^N8N_PORT=' .env | cut -d= -f2-)
+    local status
+    status=$(curl -sf "http://localhost:${port}/rest/settings" 2>/dev/null | python3 -c "
+import json, sys
+d = json.load(sys.stdin)
+print('setup' if d.get('userManagement',{}).get('showSetupOnFirstLoad') else 'done')
+" 2>/dev/null || echo "unknown")
+    if [ "$status" != "setup" ]; then
+        echo "  Owner already configured — skipping"
+        return 0
+    fi
+    echo "  Creating owner account..."
+    curl -sf -X POST "http://localhost:${port}/rest/owner/setup" \
+        -H "Content-Type: application/json" \
+        -d "{
+            \"email\": \"${N8N_AUTH_USER}@bcsdlab.com\",
+            \"firstName\": \"BCSD\",
+            \"lastName\": \"Admin\",
+            \"password\": \"${N8N_AUTH_PASSWORD}\"
+        }" > /dev/null
+    echo "  Owner created: ${N8N_AUTH_USER}@bcsdlab.com"
+}
+
 echo "=== n8n Init ==="
 
 echo "1. Starting n8n..."
@@ -90,15 +116,18 @@ if ! wait_n8n; then
     exit 1
 fi
 
-echo "3. Importing workflows..."
+echo "3. Setting up owner account..."
+setup_owner
+
+echo "4. Importing workflows..."
 import_workflow "/workflows/pg_sheets_sync.json" "PG → Sheets Sync (5min)"
 import_workflow "/workflows/link_auto_expire.json" "Link Auto-Expiration (hourly)"
 
-echo "4. Setting up Google Sheets credential..."
+echo "5. Setting up Google Sheets credential..."
 set -a; source .env; set +a
 setup_credential
 
-echo "5. Activating workflows..."
+echo "6. Activating workflows..."
 activate_workflow "PG → Sheets Sync"
 activate_workflow "Link Auto-Expiration"
 

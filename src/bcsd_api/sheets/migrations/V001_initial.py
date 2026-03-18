@@ -45,9 +45,9 @@ _SEEDS: dict[str, list[dict]] = {
         {"name": "Mentor"},
     ],
     "payment_statuses": [
-        {"name": "Unpaid"},
-        {"name": "Paid"},
-        {"name": "Exempt"},
+        {"name": "미납"},
+        {"name": "납부"},
+        {"name": "면제"},
     ],
 }
 

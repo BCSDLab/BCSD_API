@@ -31,7 +31,7 @@ def upgrade() -> None:
         sa.Column("team", sa.String),
         sa.Column("role", sa.String),
         sa.Column("join_date", sa.String),
-        sa.Column("payment_status", sa.String, server_default="Unpaid"),
+        sa.Column("payment_status", sa.String, server_default="미납"),
         sa.Column("last_updated", sa.String),
     )
 

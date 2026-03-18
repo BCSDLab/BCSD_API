@@ -16,7 +16,7 @@ members = Table(
     Column("team", String),
     Column("role", String),
     Column("join_date", String),
-    Column("payment_status", String, server_default="Unpaid"),
+    Column("payment_status", String, server_default="미납"),
     Column("last_updated", String),
 )
 
