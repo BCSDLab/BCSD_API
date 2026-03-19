@@ -40,7 +40,6 @@ services:
     volumes:
       - n8n-data:/home/node/.n8n
       - ../../workflows:/workflows:ro
-      - ../../${GOOGLE_SERVICE_ACCOUNT_FILE}:/credentials/sa.json:ro
     networks:
       - bcsd
 

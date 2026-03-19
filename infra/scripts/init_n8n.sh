@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# n8n workflow import + owner setup + Postgres credential
+# n8n workflow import + owner setup
 # Idempotent: skips if already configured
-# Google Sheets credential must be set up manually in n8n UI
+# Credentials (Postgres, Google Sheets) must be set up manually in n8n UI
 
 COMPOSE="sudo docker compose -p bcsd-app --env-file .env -f infra/docker/docker-compose.yml"
 MAX_RETRIES=15
@@ -26,17 +26,6 @@ workflow_exists() {
     local count
     count=$($COMPOSE exec -T n8n n8n list:workflow 2>&1 | grep -c "$name" || true)
     [ "$count" -gt 0 ]
-}
-
-import_workflow() {
-    local file="$1"
-    local name="$2"
-    if workflow_exists "$name"; then
-        echo "  Workflow '$name' already exists — skipping"
-        return 0
-    fi
-    echo "  Importing '$name'..."
-    $COMPOSE exec -T n8n n8n import:workflow --input="$file" 2>&1 || true
 }
 
 delete_workflow() {
@@ -76,36 +65,6 @@ print('setup' if d.get('userManagement',{}).get('showSetupOnFirstLoad') else 'do
     echo "  Owner created: ${N8N_AUTH_USER}@bcsdlab.com"
 }
 
-setup_pg_credential() {
-    local existing
-    existing=$($COMPOSE exec -T n8n n8n list:credential 2>&1 | grep -c "BCSD PostgreSQL" || true)
-    if [ "$existing" -gt 0 ]; then
-        echo "  Postgres credential already exists — skipping"
-        return 0
-    fi
-    echo "  Creating Postgres credential from .env..."
-    set -a; source .env; set +a
-    local cred_json
-    cred_json=$(python3 -c "
-import json, sys, uuid
-cred = [{
-    'id': str(uuid.uuid4()),
-    'name': 'BCSD PostgreSQL',
-    'type': 'postgres',
-    'data': {
-        'host': '${POSTGRES_HOST:-postgres}',
-        'port': ${POSTGRES_PORT:-5432},
-        'database': '${POSTGRES_DB}',
-        'user': '${POSTGRES_USER}',
-        'password': '${POSTGRES_PASSWORD}',
-        'ssl': 'disable'
-    }
-}]
-json.dump(cred, sys.stdout)
-")
-    echo "$cred_json" | $COMPOSE exec -T n8n n8n import:credentials --input=/dev/stdin
-}
-
 echo "=== n8n Init ==="
 
 echo "1. Starting n8n..."
@@ -121,17 +80,14 @@ fi
 echo "3. Setting up owner account..."
 setup_owner
 
-echo "4. Setting up Postgres credential..."
-setup_pg_credential
-
-echo "5. Replacing workflows..."
+echo "4. Replacing workflows..."
 delete_workflow "Link Auto-Expiration (hourly)"
 delete_workflow "Link Auto-Expiration (1min)"
 delete_workflow "PG → Sheets Sync (5min)"
 
-echo "6. Importing workflows..."
+echo "5. Importing workflows..."
 $COMPOSE exec -T n8n n8n import:workflow --input="/workflows/pg_sheets_sync.json" 2>&1
 $COMPOSE exec -T n8n n8n import:workflow --input="/workflows/link_auto_expire.json" 2>&1
 
 echo "=== n8n Init complete ==="
-echo "NOTE: Set up Google Sheets credential in n8n UI if first deploy"
+echo "NOTE: Set up Postgres + Google Sheets credentials in n8n UI if first deploy"
