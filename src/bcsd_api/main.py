@@ -85,7 +85,7 @@ def _mount_graphql(app: FastAPI) -> None:
     from .graphql.context import context_getter
     from .graphql.schema import schema
 
-    router = GraphQLRouter(schema, context_getter=context_getter, graphiql=False)
+    router = GraphQLRouter(schema, context_getter=context_getter, graphql_ide=None)
     app.include_router(router, prefix="/graphql")
 
 
