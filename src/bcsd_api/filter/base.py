@@ -5,16 +5,20 @@ from pydantic import BaseModel, Field
 T = TypeVar("T")
 
 
+class SortField(BaseModel):
+    field: str
+    order: str = "asc"
+
+
 class BaseFilter(BaseModel):
     page: int = Field(1, ge=1)
     size: int = Field(20, ge=1, le=100)
-    sort_by: str = "id"
-    sort_order: str = Field("asc", pattern="^(asc|desc)$")
+    sorts: list[SortField] = Field(default=[SortField(field="id")])
 
     search_fields: list[str] = Field(default=[], exclude=True)
 
     def filters(self) -> dict:
-        excluded = {"page", "size", "sort_by", "sort_order", "search_fields"}
+        excluded = {"page", "size", "sorts", "search_fields"}
         pairs = self.model_dump(exclude=excluded, exclude_none=True)
         return pairs
 
@@ -52,10 +56,14 @@ def _valid_columns(rows: list[dict]) -> set[str]:
 
 
 def _sort_rows(rows: list[dict], filt: BaseFilter) -> list[dict]:
-    if filt.sort_by not in _valid_columns(rows):
+    valid = _valid_columns(rows)
+    safe = [s for s in filt.sorts if s.field in valid]
+    if not safe:
         return rows
-    reverse = filt.sort_order == "desc"
-    return sorted(rows, key=lambda r: r.get(filt.sort_by, ""), reverse=reverse)
+    for s in reversed(safe):
+        reverse = s.order == "desc"
+        rows = sorted(rows, key=lambda r, f=s.field: r.get(f, ""), reverse=reverse)
+    return rows
 
 
 def apply_filter(rows: list[dict], filt: BaseFilter) -> PagedResponse:

@@ -3,7 +3,7 @@ from strawberry.types import Info
 
 from bcsd_api.filter.links import LinkFilter
 from bcsd_api.graphql.context import GqlContext, require_user
-from bcsd_api.graphql.convert import from_model, from_paged
+from bcsd_api.graphql.convert import from_model, from_paged, to_sorts
 
 from . import service
 from .schema import CreateRequest, UpdateRequest
@@ -22,7 +22,7 @@ from .types import (
 def _to_filter(inp: LinkFilterInput) -> LinkFilter:
     return LinkFilter(
         page=inp.page, size=inp.size,
-        sort_by=inp.sort_by, sort_order=inp.sort_order,
+        sorts=to_sorts(inp.sorts),
         creator_id=inp.creator_id, expired=inp.expired,
     )
 

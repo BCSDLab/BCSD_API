@@ -1,5 +1,7 @@
 import strawberry
 
+from bcsd_api.graphql.convert import SortFieldInput
+
 
 @strawberry.type
 class MemberType:
@@ -48,8 +50,7 @@ class PagedMembers:
 class MemberFilterInput:
     page: int = 1
     size: int = 20
-    sort_by: str = "id"
-    sort_order: str = "asc"
+    sorts: list[SortFieldInput] | None = None
     status: str | None = None
     track: str | None = None
     team: str | None = None

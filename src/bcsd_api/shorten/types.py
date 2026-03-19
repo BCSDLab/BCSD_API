@@ -2,6 +2,8 @@ from datetime import datetime
 
 import strawberry
 
+from bcsd_api.graphql.convert import SortFieldInput
+
 
 @strawberry.type
 class LinkType:
@@ -53,8 +55,7 @@ class PagedLinks:
 class LinkFilterInput:
     page: int = 1
     size: int = 20
-    sort_by: str = "id"
-    sort_order: str = "asc"
+    sorts: list[SortFieldInput] | None = None
     creator_id: str | None = None
     expired: str | None = None
 

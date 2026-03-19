@@ -3,7 +3,7 @@ from strawberry.types import Info
 
 from bcsd_api.filter.members import MemberFilter
 from bcsd_api.graphql.context import GqlContext, require_user
-from bcsd_api.graphql.convert import from_model, from_paged
+from bcsd_api.graphql.convert import from_model, from_paged, to_sorts
 
 from . import service
 from .types import (
@@ -19,7 +19,7 @@ from .types import (
 def _to_filter(inp: MemberFilterInput) -> MemberFilter:
     return MemberFilter(
         page=inp.page, size=inp.size,
-        sort_by=inp.sort_by, sort_order=inp.sort_order,
+        sorts=to_sorts(inp.sorts),
         status=inp.status, track=inp.track,
         team=inp.team, payment_status=inp.payment_status,
         name=inp.name,
