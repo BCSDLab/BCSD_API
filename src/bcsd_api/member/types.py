@@ -33,6 +33,7 @@ class FiltersType:
 class MeType:
     id: str
     email: str
+    member: MemberDetailType
 
 
 @strawberry.type

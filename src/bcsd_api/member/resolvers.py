@@ -86,4 +86,9 @@ def resolve_tracks(info: Info[GqlContext, None]) -> list[str]:
 
 def resolve_me(info: Info[GqlContext, None]) -> MeType:
     user = require_user(info.context)
-    return MeType(id=user["sub"], email=user["email"])
+    detail = service.get_member(info.context.member_repo, user["sub"])
+    return MeType(
+        id=user["sub"],
+        email=user["email"],
+        member=_to_detail(detail),
+    )
