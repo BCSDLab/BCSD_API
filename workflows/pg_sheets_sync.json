@@ -25,8 +25,7 @@
       "name": "List PG Tables",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
-      "position": [220, 0],
-      "onError": "continueRegularOutput"
+      "position": [220, 0]
     },
     {
       "parameters": {"options": {}},
@@ -38,16 +37,50 @@
     },
     {
       "parameters": {
+        "operation": "create",
+        "documentId": {"__rl": true, "mode": "id", "value": "={{ $env.GOOGLE_SHEETS_ID }}"},
+        "title": "={{ $json.table_name }}"
+      },
+      "id": "sheets-create",
+      "name": "Ensure Sheet Exists",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [660, 0],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
         "operation": "executeQuery",
-        "query": "=SELECT * FROM {{ $json.table_name }}",
+        "query": "=SELECT * FROM {{ $('Loop Over Tables').item.json.table_name }}",
         "options": {}
       },
       "id": "pg-dump-table",
       "name": "Dump Table",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
-      "position": [660, 0],
-      "onError": "continueRegularOutput"
+      "position": [880, 0]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {"caseSensitive": true, "leftValue": "", "typeValidation": "strict"},
+          "conditions": [
+            {
+              "id": "has-rows",
+              "leftValue": "={{ $input.all().length }}",
+              "rightValue": 0,
+              "operator": {"type": "number", "operation": "gt"}
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-has-data",
+      "name": "Has Data?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [1100, 0]
     },
     {
       "parameters": {
@@ -59,8 +92,7 @@
       "name": "Clear Sheet",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
-      "position": [880, 0],
-      "onError": "continueRegularOutput"
+      "position": [1320, -100]
     },
     {
       "parameters": {
@@ -77,15 +109,16 @@
       "name": "Write to Sheet",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
-      "position": [1100, 0],
-      "onError": "continueRegularOutput"
+      "position": [1540, -100]
     }
   ],
   "connections": {
     "Every 5 Minutes": {"main": [[{"node": "List PG Tables", "type": "main", "index": 0}]]},
     "List PG Tables": {"main": [[{"node": "Loop Over Tables", "type": "main", "index": 0}]]},
-    "Loop Over Tables": {"main": [[], [{"node": "Dump Table", "type": "main", "index": 0}]]},
-    "Dump Table": {"main": [[{"node": "Clear Sheet", "type": "main", "index": 0}]]},
+    "Loop Over Tables": {"main": [[], [{"node": "Ensure Sheet Exists", "type": "main", "index": 0}]]},
+    "Ensure Sheet Exists": {"main": [[{"node": "Dump Table", "type": "main", "index": 0}]]},
+    "Dump Table": {"main": [[{"node": "Has Data?", "type": "main", "index": 0}]]},
+    "Has Data?": {"main": [[{"node": "Clear Sheet", "type": "main", "index": 0}], [{"node": "Loop Over Tables", "type": "main", "index": 0}]]},
     "Clear Sheet": {"main": [[{"node": "Write to Sheet", "type": "main", "index": 0}]]},
     "Write to Sheet": {"main": [[{"node": "Loop Over Tables", "type": "main", "index": 0}]]}
   },
