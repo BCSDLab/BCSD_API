@@ -20,6 +20,7 @@ dependencies = [
     "sqlalchemy>=2.0",
     "psycopg[binary]>=3.1",
     "alembic>=1.13",
+    "strawberry-graphql[fastapi]>=0.235.0",
 ]
 
 [project.optional-dependencies]

@@ -75,7 +75,18 @@ def create_app() -> FastAPI:
     app.include_router(track_router)
     app.include_router(shorten_router)
     app.include_router(redirect_router)
+    _mount_graphql(app)
     return app
+
+
+def _mount_graphql(app: FastAPI) -> None:
+    from strawberry.fastapi import GraphQLRouter
+
+    from .graphql.context import context_getter
+    from .graphql.schema import schema
+
+    router = GraphQLRouter(schema, context_getter=context_getter)
+    app.include_router(router, prefix="/graphql")
 
 
 app = create_app()
