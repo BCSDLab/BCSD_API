@@ -57,7 +57,7 @@
         "method": "GET",
         "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $env.GOOGLE_SHEETS_ID }}?fields=sheets.properties",
         "authentication": "predefinedCredentialType",
-        "nodeCredentialType": "googleSheetsApi",
+        "nodeCredentialType": "googleApi",
         "options": {}
       },
       "id": "get-sheet-ids",
@@ -139,7 +139,7 @@
         "method": "POST",
         "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $env.GOOGLE_SHEETS_ID }}:batchUpdate",
         "authentication": "predefinedCredentialType",
-        "nodeCredentialType": "googleSheetsApi",
+        "nodeCredentialType": "googleApi",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify($json.body) }}",
