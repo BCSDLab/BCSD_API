@@ -3,9 +3,9 @@ from strawberry.types import Info
 
 from bcsd_api.filter.members import MemberFilter
 from bcsd_api.graphql.context import GqlContext, require_user
+from bcsd_api.graphql.convert import from_model, from_paged
 
 from . import service
-from .schema import MemberDetail, MemberResponse
 from .types import (
     FiltersType,
     MeType,
@@ -26,25 +26,6 @@ def _to_filter(inp: MemberFilterInput) -> MemberFilter:
     )
 
 
-def _to_member(m: MemberResponse) -> MemberType:
-    return MemberType(
-        id=m.id, name=m.name, email=m.email,
-        status=m.status, track=m.track,
-        team=m.team, payment_status=m.payment_status,
-    )
-
-
-def _to_detail(m: MemberDetail) -> MemberDetailType:
-    return MemberDetailType(
-        id=m.id, name=m.name, email=m.email,
-        status=m.status, track=m.track,
-        team=m.team, payment_status=m.payment_status,
-        department=m.department, student_id=m.student_id,
-        school_email=m.school_email, phone=m.phone,
-        join_date=m.join_date, last_updated=m.last_updated,
-    )
-
-
 def resolve_members(
     info: Info[GqlContext, None],
     filter: MemberFilterInput | None = None,
@@ -53,26 +34,18 @@ def resolve_members(
     require_user(ctx)
     filt = _to_filter(filter) if filter else MemberFilter.model_validate({})
     paged = service.list_members(ctx.member_repo, filt)
-    items = [_to_member(m) for m in paged.items]
-    return PagedMembers(
-        items=items, total=paged.total,
-        page=paged.page, size=paged.size,
-    )
+    return from_paged(paged, MemberType, PagedMembers)
 
 
 def resolve_member(info: Info[GqlContext, None], id: strawberry.ID) -> MemberDetailType:
     require_user(info.context)
     m = service.get_member(info.context.member_repo, id)
-    return _to_detail(m)
+    return from_model(m, MemberDetailType)
 
 
 def resolve_filters(info: Info[GqlContext, None]) -> FiltersType:
     f = service.get_filters(info.context.conn)
-    return FiltersType(
-        tracks=f.tracks,
-        statuses=f.statuses,
-        payment_statuses=f.payment_statuses,
-    )
+    return from_model(f, FiltersType)
 
 
 def resolve_tracks(info: Info[GqlContext, None]) -> list[str]:
@@ -90,5 +63,5 @@ def resolve_me(info: Info[GqlContext, None]) -> MeType:
     return MeType(
         id=user["sub"],
         email=user["email"],
-        member=_to_detail(detail),
+        member=from_model(detail, MemberDetailType),
     )

@@ -24,19 +24,10 @@ class GqlContext(BaseContext):
 
 
 def _try_auth(request: Request, settings: Settings) -> dict | None:
-    header = request.headers.get("Authorization", "")
-    if header.startswith("Bearer "):
-        raw = header[7:]
-    else:
-        raw = request.cookies.get(settings.cookie_name, "")
+    raw = jwt_token.extract_raw(request, settings.cookie_name)
     if not raw:
         return None
-    try:
-        return jwt_token.decode_token(
-            raw, settings.jwt_secret, settings.jwt_algorithm,
-        )
-    except Exception:
-        return None
+    return jwt_token.decode_or_none(raw, settings.jwt_secret, settings.jwt_algorithm)
 
 
 def require_user(ctx: GqlContext) -> dict:

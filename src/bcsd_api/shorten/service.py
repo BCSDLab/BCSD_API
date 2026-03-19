@@ -7,10 +7,10 @@ from bcsd_api.exception import Conflict, Gone, NotFound
 from bcsd_api.filter.base import PagedResponse, apply_filter
 from bcsd_api.filter.links import LinkFilter
 from bcsd_api.id_gen import generate_id
-from bcsd_api.member.pg_repository import PgMemberRepository as MemberRepository
+from bcsd_api.member.pg_repository import PgMemberRepository
 from bcsd_api.timezone import KST
 
-from .pg_repository import PgLinkRepository as LinkRepository
+from .pg_repository import PgLinkRepository
 from .schema import (
     CreateRequest,
     CreatorOption,
@@ -39,7 +39,7 @@ def _format_expires(expires_at) -> str:
     return expires_at.isoformat()
 
 
-def _resolve_code(repo: LinkRepository, code: str | None) -> str:
+def _resolve_code(repo: PgLinkRepository, code: str | None) -> str:
     if not code:
         return _unique_code(repo)
     if repo.find_by_code(code):
@@ -63,14 +63,14 @@ def _build_row(code: str, req: CreateRequest, creator_id: str) -> dict:
     }
 
 
-def create(repo: LinkRepository, req: CreateRequest, creator_id: str) -> LinkResponse:
+def create(repo: PgLinkRepository, req: CreateRequest, creator_id: str) -> LinkResponse:
     code = _resolve_code(repo, req.code)
     row = _build_row(code, req, creator_id)
     repo.create(row)
     return LinkResponse(**row)
 
 
-def _unique_code(repo: LinkRepository) -> str:
+def _unique_code(repo: PgLinkRepository) -> str:
     for _ in range(_MAX_RETRIES):
         code = _generate_code()
         if not repo.find_by_code(code):
@@ -99,7 +99,7 @@ def _add_expired_flag(rows: list[dict]) -> list[dict]:
     return rows
 
 
-def list_links(repo: LinkRepository, filt: LinkFilter) -> PagedResponse[LinkResponse]:
+def list_links(repo: PgLinkRepository, filt: LinkFilter) -> PagedResponse[LinkResponse]:
     rows = _add_expired_flag(repo.find_all())
     paged = apply_filter(rows, filt)
     items = [LinkResponse(**r) for r in paged.items]
@@ -119,7 +119,7 @@ def _aggregate_clicks(clicks: list[dict]) -> list[DailyClick]:
     return [DailyClick(date=d, count=n) for d, n in sorted(counts.items())]
 
 
-def get_detail(repo: LinkRepository, link_id: str) -> LinkDetail:
+def get_detail(repo: PgLinkRepository, link_id: str) -> LinkDetail:
     row = repo.find_by_id(link_id)
     if not row:
         raise NotFound(f"link {link_id} not found")
@@ -139,13 +139,13 @@ def _serialize_field(key: str, val) -> str:
     return str(val)
 
 
-def _apply_updates(repo: LinkRepository, link_id: str, updates: dict) -> None:
+def _apply_updates(repo: PgLinkRepository, link_id: str, updates: dict) -> None:
     for key, val in updates.items():
         repo.update(link_id, key, _serialize_field(key, val))
     repo.update(link_id, "updated_at", _now_str())
 
 
-def update(repo: LinkRepository, link_id: str, req: UpdateRequest) -> LinkResponse:
+def update(repo: PgLinkRepository, link_id: str, req: UpdateRequest) -> LinkResponse:
     row = repo.find_by_id(link_id)
     if not row:
         raise NotFound(f"link {link_id} not found")
@@ -154,7 +154,7 @@ def update(repo: LinkRepository, link_id: str, req: UpdateRequest) -> LinkRespon
     return LinkResponse(**{**row, **updates, "updated_at": _now_str()})
 
 
-def toggle(repo: LinkRepository, link_id: str) -> LinkResponse:
+def toggle(repo: PgLinkRepository, link_id: str) -> LinkResponse:
     row = repo.find_by_id(link_id)
     if not row:
         raise NotFound(f"link {link_id} not found")
@@ -170,7 +170,7 @@ def toggle(repo: LinkRepository, link_id: str) -> LinkResponse:
     return LinkResponse(**row)
 
 
-def delete(repo: LinkRepository, link_id: str) -> None:
+def delete(repo: PgLinkRepository, link_id: str) -> None:
     row = repo.find_by_id(link_id)
     if not row:
         raise NotFound(f"link {link_id} not found")
@@ -178,7 +178,7 @@ def delete(repo: LinkRepository, link_id: str) -> None:
     repo.delete(link_id)
 
 
-def resolve(repo: LinkRepository, code: str) -> tuple[str, str]:
+def resolve(repo: PgLinkRepository, code: str) -> tuple[str, str]:
     row = repo.find_by_code(code)
     if not row:
         raise NotFound(f"short link '{code}' not found")
@@ -190,7 +190,7 @@ def resolve(repo: LinkRepository, code: str) -> tuple[str, str]:
     return row["url"], row["id"]
 
 
-def record_click(repo: LinkRepository, link_id: str, referer: str, user_agent: str) -> None:
+def record_click(repo: PgLinkRepository, link_id: str, referer: str, user_agent: str) -> None:
     row = {
         "id": generate_id("LC"),
         "link_id": link_id,
@@ -201,14 +201,14 @@ def record_click(repo: LinkRepository, link_id: str, referer: str, user_agent: s
     repo.add_click(row)
 
 
-def _creator_name(members_repo: MemberRepository, cid: str) -> str:
+def _creator_name(members_repo: PgMemberRepository, cid: str) -> str:
     member = members_repo.find_by_id(cid)
     if not member:
         return cid
     return member["name"]
 
 
-def get_filters(repo: LinkRepository, members_repo: MemberRepository) -> LinkFiltersResponse:
+def get_filters(repo: PgLinkRepository, members_repo: PgMemberRepository) -> LinkFiltersResponse:
     rows = repo.find_all()
     ids = list({r["creator_id"] for r in rows if r.get("creator_id")})
     creators = [CreatorOption(id=cid, name=_creator_name(members_repo, cid)) for cid in ids]

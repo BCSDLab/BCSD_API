@@ -67,19 +67,11 @@ def get_link_repo(conn: Connection = Depends(get_conn)) -> PgLinkRepository:
     return PgLinkRepository(conn)
 
 
-def _extract_token(request: Request, settings: Settings) -> str:
-    header = request.headers.get("Authorization", "")
-    if header.startswith("Bearer "):
-        return header[7:]
-    cookie = request.cookies.get(settings.cookie_name)
-    if cookie:
-        return cookie
-    raise Unauthorized("missing authorization")
-
-
 def current_user(
     request: Request,
     settings: Settings = Depends(get_settings),
 ) -> dict:
-    raw = _extract_token(request, settings)
+    raw = jwt_token.extract_raw(request, settings.cookie_name)
+    if not raw:
+        raise Unauthorized("missing authorization")
     return jwt_token.decode_token(raw, settings.jwt_secret, settings.jwt_algorithm)
