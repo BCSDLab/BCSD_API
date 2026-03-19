@@ -1,6 +1,7 @@
 {
   "id": "pg-sheets-sync",
   "name": "PG → Sheets Sync (5min)",
+  "active": true,
   "nodes": [
     {
       "parameters": {
