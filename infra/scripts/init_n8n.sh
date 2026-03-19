@@ -2,7 +2,6 @@
 set -euo pipefail
 
 # n8n workflow import + owner setup
-# Idempotent: skips if already configured
 # Credentials (Postgres, Google Sheets) must be set up manually in n8n UI
 
 COMPOSE="sudo docker compose -p bcsd-app --env-file .env -f infra/docker/docker-compose.yml"
@@ -19,24 +18,6 @@ wait_n8n() {
         sleep 2
     done
     return 1
-}
-
-workflow_exists() {
-    local name="$1"
-    local count
-    count=$($COMPOSE exec -T n8n n8n list:workflow 2>&1 | grep -c "$name" || true)
-    [ "$count" -gt 0 ]
-}
-
-delete_workflow() {
-    local name="$1"
-    if ! workflow_exists "$name"; then
-        return 0
-    fi
-    local wf_id
-    wf_id=$($COMPOSE exec -T n8n n8n list:workflow 2>&1 | grep "$name" | awk -F'|' '{print $1}')
-    echo "  Deleting old workflow '$name' (id: $wf_id)..."
-    $COMPOSE exec -T n8n n8n delete:workflow --id="$wf_id" 2>&1 || true
 }
 
 setup_owner() {
@@ -80,14 +61,13 @@ fi
 echo "3. Setting up owner account..."
 setup_owner
 
-echo "4. Replacing workflows..."
-delete_workflow "Link Auto-Expiration (hourly)"
-delete_workflow "Link Auto-Expiration (1min)"
-delete_workflow "PG → Sheets Sync (5min)"
-
-echo "5. Importing workflows..."
+echo "4. Importing workflows (overwrites by ID)..."
 $COMPOSE exec -T n8n n8n import:workflow --input="/workflows/pg_sheets_sync.json" 2>&1
 $COMPOSE exec -T n8n n8n import:workflow --input="/workflows/link_auto_expire.json" 2>&1
+
+echo "5. Publishing workflows..."
+$COMPOSE exec -T n8n n8n publish:workflow --id="pg-sheets-sync" 2>&1 || true
+$COMPOSE exec -T n8n n8n publish:workflow --id="link-auto-expire" 2>&1 || true
 
 echo "=== n8n Init complete ==="
 echo "NOTE: Set up Postgres + Google Sheets credentials in n8n UI if first deploy"
