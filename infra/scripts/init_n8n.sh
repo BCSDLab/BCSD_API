@@ -124,12 +124,14 @@ setup_owner
 echo "4. Setting up Postgres credential..."
 setup_pg_credential
 
-echo "5. Cleaning up old workflows..."
+echo "5. Replacing workflows..."
 delete_workflow "Link Auto-Expiration (hourly)"
+delete_workflow "Link Auto-Expiration (1min)"
+delete_workflow "PG → Sheets Sync (5min)"
 
 echo "6. Importing workflows..."
-import_workflow "/workflows/pg_sheets_sync.json" "PG → Sheets Sync (5min)"
-import_workflow "/workflows/link_auto_expire.json" "Link Auto-Expiration (1min)"
+$COMPOSE exec -T n8n n8n import:workflow --input="/workflows/pg_sheets_sync.json" 2>&1
+$COMPOSE exec -T n8n n8n import:workflow --input="/workflows/link_auto_expire.json" 2>&1
 
 echo "=== n8n Init complete ==="
 echo "NOTE: Set up Google Sheets credential in n8n UI if first deploy"
