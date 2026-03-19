@@ -22,17 +22,17 @@
         "options": {}
       },
       "id": "pg-list-tables",
-      "name": "List Tables + Mod Counts",
+      "name": "List Tables",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [220, 0]
     },
     {
       "parameters": {
-        "jsCode": "const staticData = $getWorkflowStaticData('global');\nif (!staticData.mods) staticData.mods = {};\n\nconst changed = [];\nfor (const item of $input.all()) {\n  const name = item.json.table_name;\n  const mods = item.json.mod_count;\n  if (staticData.mods[name] !== mods) {\n    staticData.mods[name] = mods;\n    changed.push({ json: { table_name: name } });\n  }\n}\n\nif (changed.length === 0) return [{ json: { _skip: true } }];\nreturn changed;"
+        "jsCode": "const staticData = $getWorkflowStaticData('global');\nif (!staticData.mods) staticData.mods = {};\n\nconst changed = [];\nfor (const item of $input.all()) {\n  const name = item.json.table_name;\n  const mods = item.json.mod_count;\n  if (staticData.mods[name] !== mods) {\n    staticData.mods[name] = mods;\n    changed.push(name);\n  }\n}\n\nif (changed.length === 0) return [{ json: { _skip: true } }];\nreturn [{ json: { _skip: false, tables: changed } }];"
       },
       "id": "filter-changed",
-      "name": "Filter Changed Tables",
+      "name": "Filter Changed",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [440, 0]
@@ -40,14 +40,14 @@
     {
       "parameters": {
         "conditions": {
-          "options": {"caseSensitive": true, "leftValue": "", "typeValidation": "strict"},
-          "conditions": [{"id": "c1", "leftValue": "={{ $json._skip }}", "rightValue": true, "operator": {"type": "boolean", "operation": "notEquals"}}],
+          "options": {"caseSensitive": true, "leftValue": "", "typeValidation": "loose"},
+          "conditions": [{"id": "c1", "leftValue": "={{ $json._skip }}", "rightValue": false, "operator": {"type": "boolean", "operation": "equals"}}],
           "combinator": "and"
         },
         "options": {}
       },
       "id": "if-changed",
-      "name": "Any Changes?",
+      "name": "Has Changes?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [660, 0]
@@ -68,58 +68,25 @@
     },
     {
       "parameters": {
-        "jsCode": "const sheetsResponse = $('Get Sheet IDs').first().json;\nconst sheetMap = {};\nfor (const s of sheetsResponse.sheets) {\n  sheetMap[s.properties.title] = s.properties.sheetId;\n}\n\nconst tables = $('Any Changes?').all().map(i => i.json.table_name);\nconst result = tables.map(t => ({\n  json: { table_name: t, sheet_id: sheetMap[t] ?? null }\n}));\nreturn result;"
+        "operation": "executeQuery",
+        "query": "={{ $('Filter Changed').first().json.tables.map(t => \"SELECT '\" + t + \"' as _tbl, to_jsonb(sub) as _row FROM \\\"\" + t + \"\\\" sub\").join(' UNION ALL ') }}",
+        "options": {}
       },
-      "id": "map-sheet-ids",
-      "name": "Map Sheet IDs",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
+      "id": "pg-dump-all",
+      "name": "Dump All Changed",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
       "position": [1100, -100]
     },
     {
-      "parameters": {"options": {}},
-      "id": "split-batches",
-      "name": "Loop Over Tables",
-      "type": "n8n-nodes-base.splitInBatches",
-      "typeVersion": 3,
-      "position": [1320, -100]
-    },
-    {
       "parameters": {
-        "operation": "executeQuery",
-        "query": "=SELECT * FROM {{ $json.table_name }}",
-        "options": {}
+        "jsCode": "const sheetsData = $('Get Sheet IDs').first().json;\nconst dumpRows = $('Dump All Changed').all().map(i => i.json);\n\nconst sheetMap = {};\nfor (const s of sheetsData.sheets) {\n  sheetMap[s.properties.title] = s.properties.sheetId;\n}\n\nfunction hashCode(s) {\n  let h = 0;\n  for (let i = 0; i < s.length; i++) h = ((h << 5) - h) + s.charCodeAt(i) | 0;\n  return Math.abs(h);\n}\n\nconst grouped = {};\nfor (const r of dumpRows) {\n  if (!grouped[r._tbl]) grouped[r._tbl] = [];\n  grouped[r._tbl].push(r._row);\n}\n\nconst requests = [];\n\nfor (const [tableName, rows] of Object.entries(grouped)) {\n  if (rows.length === 0) continue;\n\n  let sheetId = sheetMap[tableName] ?? null;\n  if (sheetId == null) {\n    sheetId = hashCode(tableName);\n    requests.push({ addSheet: { properties: { sheetId, title: tableName } } });\n  }\n\n  requests.push({ updateCells: { range: { sheetId }, fields: 'userEnteredValue' } });\n\n  const headers = Object.keys(rows[0]);\n  const csvLines = [headers.join(',')];\n  for (const row of rows) {\n    csvLines.push(headers.map(h => {\n      const v = String(row[h] ?? '');\n      return (v.includes(',') || v.includes('\"') || v.includes('\\n')) ? '\"' + v.replace(/\"/g, '\"\"') + '\"' : v;\n    }).join(','));\n  }\n\n  requests.push({ pasteData: { coordinate: { sheetId, rowIndex: 0, columnIndex: 0 }, data: csvLines.join('\\n'), type: 'PASTE_NORMAL', delimiter: ',' } });\n}\n\nreturn [{ json: { body: { requests } } }];"
       },
-      "id": "pg-dump-table",
-      "name": "Dump Table",
-      "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.6,
-      "position": [1540, -100]
-    },
-    {
-      "parameters": {
-        "jsCode": "const rows = $input.all().map(i => i.json);\nconst tableName = $('Loop Over Tables').item.json.table_name;\nlet sheetId = $('Loop Over Tables').item.json.sheet_id;\n\nif (rows.length === 0) {\n  return [{ json: { _empty: true } }];\n}\n\nfunction hashCode(s) {\n  let h = 0;\n  for (let i = 0; i < s.length; i++) h = ((h << 5) - h) + s.charCodeAt(i) | 0;\n  return Math.abs(h);\n}\n\nconst headers = Object.keys(rows[0]);\nconst csvLines = [headers.join(',')];\nfor (const row of rows) {\n  csvLines.push(headers.map(h => {\n    const v = String(row[h] ?? '');\n    return (v.includes(',') || v.includes('\"') || v.includes('\\n')) ? '\"' + v.replace(/\"/g, '\"\"') + '\"' : v;\n  }).join(','));\n}\n\nconst requests = [];\n\nif (sheetId == null) {\n  sheetId = hashCode(tableName);\n  requests.push({ addSheet: { properties: { sheetId, title: tableName } } });\n}\nrequests.push({ updateCells: { range: { sheetId }, fields: 'userEnteredValue' } });\nrequests.push({ pasteData: { coordinate: { sheetId, rowIndex: 0, columnIndex: 0 }, data: csvLines.join('\\n'), type: 'PASTE_NORMAL', delimiter: ',' } });\n\nreturn [{ json: { _empty: false, body: { requests } } }];"
-      },
-      "id": "to-csv",
-      "name": "Build CSV + Payload",
+      "id": "build-payload",
+      "name": "Build Batch Payload",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1760, -100]
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {"caseSensitive": true, "leftValue": "", "typeValidation": "strict"},
-          "conditions": [{"id": "c1", "leftValue": "={{ $json._empty }}", "rightValue": true, "operator": {"type": "boolean", "operation": "notEquals"}}],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "id": "if-not-empty",
-      "name": "Has Rows?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.3,
-      "position": [1980, -100]
+      "position": [1320, -100]
     },
     {
       "parameters": {
@@ -133,24 +100,21 @@
         "options": {}
       },
       "id": "paste-data",
-      "name": "Paste to Sheet",
+      "name": "Paste to Sheets",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [2200, -200]
+      "position": [1540, -100]
     }
   ],
   "connections": {
-    "Every 5 Minutes": {"main": [[{"node": "List Tables + Mod Counts", "type": "main", "index": 0}]]},
-    "List Tables + Mod Counts": {"main": [[{"node": "Filter Changed Tables", "type": "main", "index": 0}]]},
-    "Filter Changed Tables": {"main": [[{"node": "Any Changes?", "type": "main", "index": 0}]]},
-    "Any Changes?": {"main": [[{"node": "Get Sheet IDs", "type": "main", "index": 0}], []]},
-    "Get Sheet IDs": {"main": [[{"node": "Map Sheet IDs", "type": "main", "index": 0}]]},
-    "Map Sheet IDs": {"main": [[{"node": "Loop Over Tables", "type": "main", "index": 0}]]},
-    "Loop Over Tables": {"main": [[], [{"node": "Dump Table", "type": "main", "index": 0}]]},
-    "Dump Table": {"main": [[{"node": "Build CSV + Payload", "type": "main", "index": 0}]]},
-    "Build CSV + Payload": {"main": [[{"node": "Has Rows?", "type": "main", "index": 0}]]},
-    "Has Rows?": {"main": [[{"node": "Paste to Sheet", "type": "main", "index": 0}], [{"node": "Loop Over Tables", "type": "main", "index": 0}]]},
-    "Paste to Sheet": {"main": [[{"node": "Loop Over Tables", "type": "main", "index": 0}]]}
+    "Every 5 Minutes": {"main": [[{"node": "List Tables", "type": "main", "index": 0}]]},
+    "List Tables": {"main": [[{"node": "Filter Changed", "type": "main", "index": 0}]]},
+    "Filter Changed": {"main": [[{"node": "Has Changes?", "type": "main", "index": 0}]]},
+    "Has Changes?": {"main": [[{"node": "Get Sheet IDs", "type": "main", "index": 0}], []]},
+    "Get Sheet IDs": {"main": [[{"node": "Dump All Changed", "type": "main", "index": 0}]]},
+    "Dump All Changed": {"main": [[{"node": "Build Batch Payload", "type": "main", "index": 0}]]},
+    "Build Batch Payload": {"main": [[{"node": "Paste to Sheets", "type": "main", "index": 0}]]},
+    "Paste to Sheets": {"main": [[]]}
   },
   "settings": {"executionOrder": "v1"}
 }
