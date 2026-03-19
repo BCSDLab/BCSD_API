@@ -99,25 +99,35 @@
     },
     {
       "parameters": {
+        "jsCode": "return [{ json: { table_name: $('Loop Over Tables').item.json.table_name, sheet_id: $('Loop Over Tables').item.json.sheet_id } }];"
+      },
+      "id": "passthrough",
+      "name": "Restore Context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1760, -100]
+    },
+    {
+      "parameters": {
         "operation": "executeQuery",
-        "query": "=SELECT * FROM {{ $('Loop Over Tables').item.json.table_name }}",
+        "query": "=SELECT * FROM {{ $json.table_name }}",
         "options": {}
       },
       "id": "pg-dump-table",
       "name": "Dump Table",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
-      "position": [1760, -100]
+      "position": [1980, -100]
     },
     {
       "parameters": {
-        "jsCode": "const rows = $input.all().map(i => i.json);\nconst tableName = $('Loop Over Tables').item.json.table_name;\nlet sheetId = $('Loop Over Tables').item.json.sheet_id;\n\nif (rows.length === 0) {\n  return [{ json: { _empty: true, table_name: tableName } }];\n}\n\nconst headers = Object.keys(rows[0]);\nconst csvLines = [headers.join(',')];\nfor (const row of rows) {\n  const line = headers.map(h => {\n    const v = String(row[h] ?? '');\n    if (v.includes(',') || v.includes('\"') || v.includes('\\n')) {\n      return '\"' + v.replace(/\"/g, '\"\"') + '\"';\n    }\n    return v;\n  }).join(',');\n  csvLines.push(line);\n}\n\nconst requests = [];\nif (sheetId != null) {\n  requests.push({ updateCells: { range: { sheetId: sheetId }, fields: 'userEnteredValue' } });\n}\nrequests.push({\n  pasteData: {\n    coordinate: { sheetId: sheetId ?? 0, rowIndex: 0, columnIndex: 0 },\n    data: csvLines.join('\\n'),\n    type: 'PASTE_NORMAL',\n    delimiter: ','\n  }\n});\n\nreturn [{ json: { _empty: false, table_name: tableName, body: { requests } } }];"
+        "jsCode": "const rows = $input.all().map(i => i.json);\nconst tableName = $('Restore Context').first().json.table_name;\nlet sheetId = $('Restore Context').first().json.sheet_id;\n\nif (rows.length === 0) {\n  return [{ json: { _empty: true, table_name: tableName } }];\n}\n\nconst headers = Object.keys(rows[0]);\nconst csvLines = [headers.join(',')];\nfor (const row of rows) {\n  const line = headers.map(h => {\n    const v = String(row[h] ?? '');\n    if (v.includes(',') || v.includes('\"') || v.includes('\\n')) {\n      return '\"' + v.replace(/\"/g, '\"\"') + '\"';\n    }\n    return v;\n  }).join(',');\n  csvLines.push(line);\n}\n\nconst requests = [];\nif (sheetId != null) {\n  requests.push({ updateCells: { range: { sheetId: sheetId }, fields: 'userEnteredValue' } });\n}\nrequests.push({\n  pasteData: {\n    coordinate: { sheetId: sheetId ?? 0, rowIndex: 0, columnIndex: 0 },\n    data: csvLines.join('\\n'),\n    type: 'PASTE_NORMAL',\n    delimiter: ','\n  }\n});\n\nreturn [{ json: { _empty: false, table_name: tableName, body: { requests } } }];"
       },
       "id": "to-csv",
       "name": "Build CSV + Payload",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1980, -100]
+      "position": [2200, -100]
     },
     {
       "parameters": {
@@ -132,7 +142,7 @@
       "name": "Has Rows?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
-      "position": [2200, -100]
+      "position": [2420, -100]
     },
     {
       "parameters": {
@@ -149,7 +159,7 @@
       "name": "Paste to Sheet",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [2420, -200]
+      "position": [2640, -200]
     }
   ],
   "connections": {
@@ -160,7 +170,8 @@
     "Get Sheet IDs": {"main": [[{"node": "Map Sheet IDs", "type": "main", "index": 0}]]},
     "Map Sheet IDs": {"main": [[{"node": "Loop Over Tables", "type": "main", "index": 0}]]},
     "Loop Over Tables": {"main": [[], [{"node": "Ensure Sheet", "type": "main", "index": 0}]]},
-    "Ensure Sheet": {"main": [[{"node": "Dump Table", "type": "main", "index": 0}]]},
+    "Ensure Sheet": {"main": [[{"node": "Restore Context", "type": "main", "index": 0}]]},
+    "Restore Context": {"main": [[{"node": "Dump Table", "type": "main", "index": 0}]]},
     "Dump Table": {"main": [[{"node": "Build CSV + Payload", "type": "main", "index": 0}]]},
     "Build CSV + Payload": {"main": [[{"node": "Has Rows?", "type": "main", "index": 0}]]},
     "Has Rows?": {"main": [[{"node": "Paste to Sheet", "type": "main", "index": 0}], [{"node": "Loop Over Tables", "type": "main", "index": 0}]]},
