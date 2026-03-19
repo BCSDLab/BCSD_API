@@ -1,5 +1,11 @@
-import strawberry
+import logging
+from typing import List
 
+import strawberry
+from graphql import GraphQLError
+from strawberry.types import ExecutionContext
+
+from bcsd_api.exception.base import AppException
 from bcsd_api.member import resolvers as member_resolvers
 from bcsd_api.member.types import (
     FiltersType,
@@ -47,8 +53,19 @@ class Mutation:
     delete_link: bool = strawberry.mutation(resolver=link_resolvers.resolve_delete)
 
 
+logger = logging.getLogger("strawberry.execution")
+
+
+def _process_errors(errors: List[GraphQLError], ctx: ExecutionContext | None = None) -> None:
+    for err in errors:
+        if isinstance(err.original_error, AppException):
+            continue
+        logger.error(err.message, exc_info=err.original_error)
+
+
 schema = strawberry.Schema(
     query=Query,
     mutation=Mutation,
     extensions=[AppErrorExtension],
+    process_errors=_process_errors,
 )
