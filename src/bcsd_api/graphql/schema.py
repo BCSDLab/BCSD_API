@@ -56,16 +56,16 @@ class Mutation:
 logger = logging.getLogger("strawberry.execution")
 
 
-def _process_errors(errors: List[GraphQLError], ctx: ExecutionContext | None = None) -> None:
-    for err in errors:
-        if isinstance(err.original_error, AppException):
-            continue
-        logger.error(err.message, exc_info=err.original_error)
+class _Schema(strawberry.Schema):
+    def process_errors(self, errors: List[GraphQLError], ctx: ExecutionContext | None = None) -> None:
+        for err in errors:
+            if isinstance(err.original_error, AppException):
+                continue
+            logger.error(err.message, exc_info=err.original_error)
 
 
-schema = strawberry.Schema(
+schema = _Schema(
     query=Query,
     mutation=Mutation,
     extensions=[AppErrorExtension],
-    process_errors=_process_errors,
 )
