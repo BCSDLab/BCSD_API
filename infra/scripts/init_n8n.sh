@@ -109,7 +109,7 @@ json.dump(cred, sys.stdout)
 echo "=== n8n Init ==="
 
 echo "1. Starting n8n..."
-$COMPOSE up -d n8n
+$COMPOSE up -d --force-recreate n8n
 
 echo "2. Waiting for n8n..."
 if ! wait_n8n; then
