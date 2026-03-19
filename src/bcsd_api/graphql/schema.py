@@ -57,7 +57,7 @@ logger = logging.getLogger("strawberry.execution")
 
 
 class _Schema(strawberry.Schema):
-    def process_errors(self, errors: List[GraphQLError], ctx: ExecutionContext | None = None) -> None:
+    def process_errors(self, errors: List[GraphQLError], execution_context: ExecutionContext | None = None) -> None:
         for err in errors:
             if isinstance(err.original_error, AppException):
                 continue
