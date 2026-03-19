@@ -1,4 +1,5 @@
 {
+  "id": "pg-sheets-sync",
   "name": "PG → Sheets Sync (5min)",
   "nodes": [
     {

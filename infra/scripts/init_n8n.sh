@@ -36,7 +36,18 @@ import_workflow() {
         return 0
     fi
     echo "  Importing '$name'..."
-    $COMPOSE exec -T n8n n8n import:workflow --input="$file"
+    $COMPOSE exec -T n8n n8n import:workflow --input="$file" 2>&1 || true
+}
+
+delete_workflow() {
+    local name="$1"
+    if ! workflow_exists "$name"; then
+        return 0
+    fi
+    local wf_id
+    wf_id=$($COMPOSE exec -T n8n n8n list:workflow 2>&1 | grep "$name" | awk -F'|' '{print $1}')
+    echo "  Deleting old workflow '$name' (id: $wf_id)..."
+    $COMPOSE exec -T n8n n8n delete:workflow --id="$wf_id" 2>&1 || true
 }
 
 setup_owner() {
@@ -113,7 +124,10 @@ setup_owner
 echo "4. Setting up Postgres credential..."
 setup_pg_credential
 
-echo "5. Importing workflows..."
+echo "5. Cleaning up old workflows..."
+delete_workflow "Link Auto-Expiration (hourly)"
+
+echo "6. Importing workflows..."
 import_workflow "/workflows/pg_sheets_sync.json" "PG → Sheets Sync (5min)"
 import_workflow "/workflows/link_auto_expire.json" "Link Auto-Expiration (1min)"
 

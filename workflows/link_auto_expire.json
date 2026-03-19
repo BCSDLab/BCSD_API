@@ -1,4 +1,5 @@
 {
+  "id": "link-auto-expire",
   "name": "Link Auto-Expiration (1min)",
   "nodes": [
     {
