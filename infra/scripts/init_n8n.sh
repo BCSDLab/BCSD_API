@@ -80,8 +80,11 @@ fi
 echo "3. Setting up owner account..."
 setup_owner
 
-echo "4. Importing workflows (first deploy only)..."
-import_if_new "/workflows/pg_sheets_sync.json" "pg-sheets-sync"
-import_if_new "/workflows/link_auto_expire.json" "link-auto-expire"
+echo "4. Importing workflows..."
+# Force reimport to apply JSON changes (credential links via predefinedCredentialType)
+$COMPOSE exec -T n8n n8n import:workflow --input="/workflows/pg_sheets_sync.json" 2>&1
+$COMPOSE exec -T n8n n8n import:workflow --input="/workflows/link_auto_expire.json" 2>&1
+$COMPOSE exec -T n8n n8n publish:workflow --id="pg-sheets-sync" 2>&1 || true
+$COMPOSE exec -T n8n n8n publish:workflow --id="link-auto-expire" 2>&1 || true
 
 echo "=== n8n Init complete ==="
