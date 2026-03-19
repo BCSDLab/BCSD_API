@@ -18,14 +18,46 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE' ORDER BY table_name",
+        "query": "SELECT t.table_name, COALESCE(s.n_tup_ins + s.n_tup_upd + s.n_tup_del, 0)::text as mod_count FROM information_schema.tables t LEFT JOIN pg_stat_user_tables s ON s.relname = t.table_name WHERE t.table_schema = 'public' AND t.table_type = 'BASE TABLE' ORDER BY t.table_name",
         "options": {}
       },
       "id": "pg-list-tables",
-      "name": "List PG Tables",
+      "name": "List Tables + Mod Counts",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [220, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const staticData = $getWorkflowStaticData('global');\nif (!staticData.mods) staticData.mods = {};\n\nconst changed = [];\nfor (const item of $input.all()) {\n  const name = item.json.table_name;\n  const mods = item.json.mod_count;\n  if (staticData.mods[name] !== mods) {\n    staticData.mods[name] = mods;\n    changed.push({ json: { table_name: name } });\n  }\n}\n\nif (changed.length === 0) {\n  return [{ json: { table_name: '__none__', skipped: true } }];\n}\nreturn changed;"
+      },
+      "id": "filter-changed",
+      "name": "Filter Changed Tables",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [440, 0]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {"caseSensitive": true, "leftValue": "", "typeValidation": "strict"},
+          "conditions": [
+            {
+              "id": "not-skipped",
+              "leftValue": "={{ $json.skipped }}",
+              "rightValue": true,
+              "operator": {"type": "boolean", "operation": "notEquals"}
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-has-changes",
+      "name": "Any Changes?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [660, 0]
     },
     {
       "parameters": {"options": {}},
@@ -33,7 +65,7 @@
       "name": "Loop Over Tables",
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 3,
-      "position": [440, 0]
+      "position": [880, -100]
     },
     {
       "parameters": {
@@ -45,42 +77,8 @@
       "name": "Ensure Sheet Exists",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
-      "position": [660, 0],
+      "position": [1100, -100],
       "onError": "continueRegularOutput"
-    },
-    {
-      "parameters": {
-        "operation": "executeQuery",
-        "query": "=SELECT * FROM {{ $('Loop Over Tables').item.json.table_name }}",
-        "options": {}
-      },
-      "id": "pg-dump-table",
-      "name": "Dump Table",
-      "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.6,
-      "position": [880, 0]
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {"caseSensitive": true, "leftValue": "", "typeValidation": "strict"},
-          "conditions": [
-            {
-              "id": "has-rows",
-              "leftValue": "={{ $input.all().length }}",
-              "rightValue": 0,
-              "operator": {"type": "number", "operation": "gt"}
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "id": "if-has-data",
-      "name": "Has Data?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.3,
-      "position": [1100, 0]
     },
     {
       "parameters": {
@@ -93,6 +91,18 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [1320, -100]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=SELECT * FROM {{ $('Loop Over Tables').item.json.table_name }}",
+        "options": {}
+      },
+      "id": "pg-dump-table",
+      "name": "Dump Table",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [1540, -100]
     },
     {
       "parameters": {
@@ -109,17 +119,18 @@
       "name": "Write to Sheet",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
-      "position": [1540, -100]
+      "position": [1760, -100]
     }
   ],
   "connections": {
-    "Every 5 Minutes": {"main": [[{"node": "List PG Tables", "type": "main", "index": 0}]]},
-    "List PG Tables": {"main": [[{"node": "Loop Over Tables", "type": "main", "index": 0}]]},
+    "Every 5 Minutes": {"main": [[{"node": "List Tables + Mod Counts", "type": "main", "index": 0}]]},
+    "List Tables + Mod Counts": {"main": [[{"node": "Filter Changed Tables", "type": "main", "index": 0}]]},
+    "Filter Changed Tables": {"main": [[{"node": "Any Changes?", "type": "main", "index": 0}]]},
+    "Any Changes?": {"main": [[{"node": "Loop Over Tables", "type": "main", "index": 0}], []]},
     "Loop Over Tables": {"main": [[], [{"node": "Ensure Sheet Exists", "type": "main", "index": 0}]]},
-    "Ensure Sheet Exists": {"main": [[{"node": "Dump Table", "type": "main", "index": 0}]]},
-    "Dump Table": {"main": [[{"node": "Has Data?", "type": "main", "index": 0}]]},
-    "Has Data?": {"main": [[{"node": "Clear Sheet", "type": "main", "index": 0}], [{"node": "Loop Over Tables", "type": "main", "index": 0}]]},
-    "Clear Sheet": {"main": [[{"node": "Write to Sheet", "type": "main", "index": 0}]]},
+    "Ensure Sheet Exists": {"main": [[{"node": "Clear Sheet", "type": "main", "index": 0}]]},
+    "Clear Sheet": {"main": [[{"node": "Dump Table", "type": "main", "index": 0}]]},
+    "Dump Table": {"main": [[{"node": "Write to Sheet", "type": "main", "index": 0}]]},
     "Write to Sheet": {"main": [[{"node": "Loop Over Tables", "type": "main", "index": 0}]]}
   },
   "settings": {"executionOrder": "v1"}
