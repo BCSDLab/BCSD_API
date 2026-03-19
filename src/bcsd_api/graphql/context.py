@@ -1,7 +1,6 @@
-from dataclasses import dataclass
-
 from fastapi import Depends, Request
 from sqlalchemy import Connection
+from strawberry.fastapi import BaseContext
 
 from bcsd_api.auth import token as jwt_token
 from bcsd_api.config import Settings
@@ -16,12 +15,12 @@ from bcsd_api.member.pg_repository import PgMemberRepository
 from bcsd_api.shorten.pg_repository import PgLinkRepository
 
 
-@dataclass
-class GqlContext:
-    conn: Connection
-    member_repo: PgMemberRepository
-    link_repo: PgLinkRepository
-    user: dict | None
+class GqlContext(BaseContext):
+    def __init__(self, conn, member_repo, link_repo, user):
+        self.conn = conn
+        self.member_repo = member_repo
+        self.link_repo = link_repo
+        self.user = user
 
 
 def _try_auth(request: Request, settings: Settings) -> dict | None:
