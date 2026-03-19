@@ -67,7 +67,7 @@ def resolve_links(
 ) -> PagedLinks:
     ctx = info.context
     require_user(ctx)
-    filt = _to_filter(filter) if filter else LinkFilter()
+    filt = _to_filter(filter) if filter else LinkFilter.model_validate({})
     paged = service.list_links(ctx.link_repo, filt)
     items = [_to_link(r) for r in paged.items]
     return PagedLinks(

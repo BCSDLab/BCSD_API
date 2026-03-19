@@ -50,7 +50,7 @@ def resolve_members(
 ) -> PagedMembers:
     ctx = info.context
     require_user(ctx)
-    filt = _to_filter(filter) if filter else MemberFilter()
+    filt = _to_filter(filter) if filter else MemberFilter.model_validate({})
     paged = service.list_members(ctx.member_repo, filt)
     items = [_to_member(m) for m in paged.items]
     return PagedMembers(
