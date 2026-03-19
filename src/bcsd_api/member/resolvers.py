@@ -1,3 +1,4 @@
+import strawberry
 from strawberry.types import Info
 
 from bcsd_api.filter.members import MemberFilter
@@ -59,7 +60,7 @@ def resolve_members(
     )
 
 
-def resolve_member(info: Info[GqlContext, None], id: str) -> MemberDetailType:
+def resolve_member(info: Info[GqlContext, None], id: strawberry.ID) -> MemberDetailType:
     require_user(info.context)
     m = service.get_member(info.context.member_repo, id)
     return _to_detail(m)

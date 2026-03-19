@@ -1,3 +1,4 @@
+import strawberry
 from strawberry.types import Info
 
 from bcsd_api.filter.links import LinkFilter
@@ -76,7 +77,7 @@ def resolve_links(
     )
 
 
-def resolve_link(info: Info[GqlContext, None], id: str) -> LinkDetailType:
+def resolve_link(info: Info[GqlContext, None], id: strawberry.ID) -> LinkDetailType:
     require_user(info.context)
     d = service.get_detail(info.context.link_repo, id)
     return _to_detail(d)
@@ -106,7 +107,7 @@ def resolve_create(info: Info[GqlContext, None], input: CreateLinkInput) -> Link
 
 
 def resolve_update(
-    info: Info[GqlContext, None], id: str, input: UpdateLinkInput,
+    info: Info[GqlContext, None], id: strawberry.ID, input: UpdateLinkInput,
 ) -> LinkType:
     require_user(info.context)
     req = UpdateRequest(
@@ -117,13 +118,13 @@ def resolve_update(
     return _to_link(result)
 
 
-def resolve_toggle(info: Info[GqlContext, None], id: str) -> LinkType:
+def resolve_toggle(info: Info[GqlContext, None], id: strawberry.ID) -> LinkType:
     require_user(info.context)
     result = service.toggle(info.context.link_repo, id)
     return _to_link(result)
 
 
-def resolve_delete(info: Info[GqlContext, None], id: str) -> bool:
+def resolve_delete(info: Info[GqlContext, None], id: strawberry.ID) -> bool:
     require_user(info.context)
     service.delete(info.context.link_repo, id)
     return True
