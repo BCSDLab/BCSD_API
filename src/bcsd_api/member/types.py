@@ -11,15 +11,14 @@ class MemberType:
     status: str
     track: str
     team: str
-    payment_status: str
+    department: str
+    student_id: str
+    phone: str
 
 
 @strawberry.type
 class MemberDetailType(MemberType):
-    department: str
-    student_id: str
     school_email: str
-    phone: str
     join_date: str
     last_updated: str
 
@@ -28,7 +27,6 @@ class MemberDetailType(MemberType):
 class FiltersType:
     tracks: list[str]
     statuses: list[str]
-    payment_statuses: list[str]
 
 
 @strawberry.type
@@ -54,5 +52,8 @@ class MemberFilterInput:
     status: str | None = None
     track: str | None = None
     team: str | None = None
-    payment_status: str | None = None
     name: str | None = None
+    email: str | None = None
+    department: str | None = None
+    student_id: str | None = None
+    phone: str | None = None

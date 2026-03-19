@@ -8,16 +8,9 @@ class MemberResponse(BaseModel):
     status: str
     track: str
     team: str
-    payment_status: str
-
-
-class MemberDetail(MemberResponse):
-    department: str
+    department: str = ""
     student_id: str = ""
-    school_email: str
-    phone: str
-    join_date: str
-    last_updated: str
+    phone: str = ""
 
     @field_validator("student_id", mode="before")
     @classmethod
@@ -25,7 +18,12 @@ class MemberDetail(MemberResponse):
         return str(v)
 
 
+class MemberDetail(MemberResponse):
+    school_email: str
+    join_date: str
+    last_updated: str
+
+
 class FiltersResponse(BaseModel):
     tracks: list[str]
     statuses: list[str]
-    payment_statuses: list[str]

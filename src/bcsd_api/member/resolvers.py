@@ -21,8 +21,9 @@ def _to_filter(inp: MemberFilterInput) -> MemberFilter:
         page=inp.page, size=inp.size,
         sorts=to_sorts(inp.sorts),
         status=inp.status, track=inp.track,
-        team=inp.team, payment_status=inp.payment_status,
-        name=inp.name,
+        team=inp.team, name=inp.name,
+        email=inp.email, department=inp.department,
+        student_id=inp.student_id, phone=inp.phone,
     )
 
 

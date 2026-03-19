@@ -3,7 +3,7 @@ from sqlalchemy import Connection, select
 from bcsd_api.exception import NotFound
 from bcsd_api.filter.base import PagedResponse, apply_filter
 from bcsd_api.filter.members import MemberFilter
-from bcsd_api.tables import payment_statuses, statuses, tracks
+from bcsd_api.tables import statuses, tracks
 
 from .pg_repository import PgMemberRepository
 from .schema import FiltersResponse, MemberDetail, MemberResponse
@@ -36,5 +36,4 @@ def get_filters(conn: Connection) -> FiltersResponse:
     return FiltersResponse(
         tracks=_names(conn, tracks),
         statuses=_names(conn, statuses),
-        payment_statuses=_names(conn, payment_statuses),
     )
