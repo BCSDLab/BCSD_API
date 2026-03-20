@@ -27,3 +27,8 @@ class MemberDetail(MemberResponse):
 class FiltersResponse(BaseModel):
     tracks: list[str]
     statuses: list[str]
+    departments: list[str]
+    names: list[str]
+    emails: list[str]
+    student_ids: list[str]
+    phones: list[str]

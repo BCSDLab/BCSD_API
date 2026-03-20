@@ -27,6 +27,11 @@ class MemberDetailType(MemberType):
 class FiltersType:
     tracks: list[str]
     statuses: list[str]
+    departments: list[str]
+    names: list[str]
+    emails: list[str]
+    student_ids: list[str]
+    phones: list[str]
 
 
 @strawberry.type

@@ -3,7 +3,7 @@ from sqlalchemy import Connection, select
 from bcsd_api.exception import NotFound
 from bcsd_api.filter.base import PagedResponse, apply_filter
 from bcsd_api.filter.members import MemberFilter
-from bcsd_api.tables import statuses, tracks
+from bcsd_api.tables import members, statuses, tracks
 
 from .pg_repository import PgMemberRepository
 from .schema import FiltersResponse, MemberDetail, MemberResponse
@@ -12,6 +12,11 @@ from .schema import FiltersResponse, MemberDetail, MemberResponse
 def _names(conn: Connection, table) -> list[str]:
     rows = conn.execute(select(table.c.name))
     return [row.name for row in rows]
+
+
+def _distinct(conn: Connection, column) -> list[str]:
+    rows = conn.execute(select(column).distinct().order_by(column))
+    return [row[0] for row in rows if row[0]]
 
 
 def list_members(
@@ -36,4 +41,9 @@ def get_filters(conn: Connection) -> FiltersResponse:
     return FiltersResponse(
         tracks=_names(conn, tracks),
         statuses=_names(conn, statuses),
+        departments=_distinct(conn, members.c.department),
+        names=_distinct(conn, members.c.name),
+        emails=_distinct(conn, members.c.email),
+        student_ids=_distinct(conn, members.c.student_id),
+        phones=_distinct(conn, members.c.phone),
     )
