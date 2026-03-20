@@ -24,6 +24,7 @@ def _to_filter(inp: LinkFilterInput) -> LinkFilter:
         page=inp.page, size=inp.size,
         sorts=to_sorts(inp.sorts),
         creator_id=inp.creator_id, expired=inp.expired,
+        title=inp.title, code=inp.code,
     )
 
 

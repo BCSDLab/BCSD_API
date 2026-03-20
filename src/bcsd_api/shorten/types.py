@@ -58,6 +58,8 @@ class LinkFilterInput:
     sorts: list[SortFieldInput] | None = None
     creator_id: str | None = None
     expired: str | None = None
+    title: str | None = None
+    code: str | None = None
 
 
 @strawberry.input
