@@ -10,6 +10,7 @@ from .schema import CreateRequest, UpdateRequest
 from .types import (
     CreateLinkInput,
     CreatorOptionType,
+    DailyClickType,
     LinkDetailType,
     LinkFilterInput,
     LinkFiltersType,
@@ -42,7 +43,9 @@ def resolve_links(
 def resolve_link(info: Info[GqlContext, None], id: strawberry.ID) -> LinkDetailType:
     require_user(info.context)
     d = service.get_detail(info.context.link_repo, id)
-    return from_model(d, LinkDetailType)
+    data = d.model_dump()
+    data["daily_clicks"] = [DailyClickType(**c) for c in data["daily_clicks"]]
+    return LinkDetailType(**data)
 
 
 def resolve_link_filters(info: Info[GqlContext, None]) -> LinkFiltersType:
