@@ -4,7 +4,7 @@ from .base import BaseFilter
 
 
 class LinkFilter(BaseFilter):
-    creator_id: str | None = None
+    creator_id: list[str] | str | None = None
     expired: str | None = None
     title: str | None = None
     code: str | None = None

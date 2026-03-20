@@ -2,9 +2,9 @@ from .base import BaseFilter
 
 
 class MemberFilter(BaseFilter):
-    status: str | None = None
-    track: str | None = None
-    team: str | None = None
+    status: list[str] | str | None = None
+    track: list[str] | str | None = None
+    team: list[str] | str | None = None
     name: str | None = None
     email: str | None = None
     department: str | None = None

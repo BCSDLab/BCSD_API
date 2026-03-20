@@ -30,8 +30,10 @@ class PagedResponse(BaseModel, Generic[T]):
     size: int
 
 
-def _matches_row(row: dict, key: str, value: str, search: set[str]) -> bool:
+def _matches_row(row: dict, key: str, value, search: set[str]) -> bool:
     cell = row.get(key, "")
+    if isinstance(value, list):
+        return cell in value
     if key in search:
         return value.lower() in cell.lower()
     return cell == value

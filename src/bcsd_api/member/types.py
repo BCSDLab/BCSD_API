@@ -54,9 +54,9 @@ class MemberFilterInput:
     page: int = 1
     size: int = 20
     sorts: list[SortFieldInput] | None = None
-    status: str | None = None
-    track: str | None = None
-    team: str | None = None
+    status: list[str] | None = None
+    track: list[str] | None = None
+    team: list[str] | None = None
     name: str | None = None
     email: str | None = None
     department: str | None = None

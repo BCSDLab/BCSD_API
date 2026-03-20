@@ -56,7 +56,7 @@ class LinkFilterInput:
     page: int = 1
     size: int = 20
     sorts: list[SortFieldInput] | None = None
-    creator_id: str | None = None
+    creator_id: list[str] | None = None
     expired: str | None = None
     title: str | None = None
     code: str | None = None
