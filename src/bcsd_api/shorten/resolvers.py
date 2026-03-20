@@ -3,7 +3,7 @@ from strawberry.types import Info
 
 from bcsd_api.filter.links import LinkFilter
 from bcsd_api.graphql.context import GqlContext, require_user
-from bcsd_api.graphql.convert import from_model, from_paged, to_sorts
+from bcsd_api.graphql.convert import from_model, from_paged, to_filter
 
 from . import service
 from .schema import CreateRequest, UpdateRequest
@@ -20,22 +20,13 @@ from .types import (
 )
 
 
-def _to_filter(inp: LinkFilterInput) -> LinkFilter:
-    return LinkFilter(
-        page=inp.page, size=inp.size,
-        sorts=to_sorts(inp.sorts),
-        creator_id=inp.creator_id, expired=inp.expired,
-        title=inp.title, code=inp.code,
-    )
-
-
 def resolve_links(
     info: Info[GqlContext, None],
     filter: LinkFilterInput | None = None,
 ) -> PagedLinks:
     ctx = info.context
     require_user(ctx)
-    filt = _to_filter(filter) if filter else LinkFilter.model_validate({})
+    filt = to_filter(filter, LinkFilter) if filter else LinkFilter.model_validate({})
     paged = service.list_links(ctx.link_repo, filt)
     return from_paged(paged, LinkType, PagedLinks)
 

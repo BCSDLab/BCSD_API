@@ -3,7 +3,7 @@ from strawberry.types import Info
 
 from bcsd_api.filter.members import MemberFilter
 from bcsd_api.graphql.context import GqlContext, require_user
-from bcsd_api.graphql.convert import from_model, from_paged, to_sorts
+from bcsd_api.graphql.convert import from_model, from_paged, to_filter
 
 from . import service
 from .types import (
@@ -16,24 +16,13 @@ from .types import (
 )
 
 
-def _to_filter(inp: MemberFilterInput) -> MemberFilter:
-    return MemberFilter(
-        page=inp.page, size=inp.size,
-        sorts=to_sorts(inp.sorts),
-        status=inp.status, track=inp.track,
-        team=inp.team, name=inp.name,
-        email=inp.email, department=inp.department,
-        student_id=inp.student_id, phone=inp.phone,
-    )
-
-
 def resolve_members(
     info: Info[GqlContext, None],
     filter: MemberFilterInput | None = None,
 ) -> PagedMembers:
     ctx = info.context
     require_user(ctx)
-    filt = _to_filter(filter) if filter else MemberFilter.model_validate({})
+    filt = to_filter(filter, MemberFilter) if filter else MemberFilter.model_validate({})
     paged = service.list_members(ctx.member_repo, filt)
     return from_paged(paged, MemberType, PagedMembers)
 
