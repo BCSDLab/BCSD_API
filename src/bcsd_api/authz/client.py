@@ -39,6 +39,13 @@ def _update(operation, res_type: str, res_id: str, relation: str, user_id: str) 
     )
 
 
+def _resolve(call):
+    resolve = getattr(call, "result", None)
+    if resolve:
+        return resolve()
+    return call
+
+
 class AuthzClient:
     def __init__(self, endpoint: str, token: str):
         self._client = Client(
@@ -54,7 +61,7 @@ class AuthzClient:
                 subject=_subject_ref(user_id),
             )
         )
-        resp = call.result() if hasattr(call, "result") else call
+        resp = _resolve(call)
         return resp.permissionship == _HAS
 
     def add_relation(self, res_type: str, res_id: str, relation: str, user_id: str) -> None:
@@ -64,13 +71,9 @@ class AuthzClient:
         self._write(_DELETE, res_type, res_id, relation, user_id)
 
     def write_schema(self, schema: str) -> None:
-        call = self._client.WriteSchema(WriteSchemaRequest(schema=schema))
-        if hasattr(call, "result"):
-            call.result()
+        _resolve(self._client.WriteSchema(WriteSchemaRequest(schema=schema)))
 
     def _write(self, operation: int, res_type: str, res_id: str, relation: str, user_id: str) -> None:
-        call = self._client.WriteRelationships(
+        _resolve(self._client.WriteRelationships(
             WriteRelationshipsRequest(updates=[_update(operation, res_type, res_id, relation, user_id)])
-        )
-        if hasattr(call, "result"):
-            call.result()
+        ))
