@@ -1,4 +1,8 @@
+import logging
+
 from bcsd_api.exception import Forbidden
+
+logger = logging.getLogger(__name__)
 
 ORG_ID = "bcsdlab"
 
@@ -6,7 +10,12 @@ ORG_ID = "bcsdlab"
 def require_permission(authz, permission: str, user_id: str) -> None:
     if not authz:
         return
-    if authz.check("organization", ORG_ID, permission, user_id):
+    try:
+        granted = authz.check("organization", ORG_ID, permission, user_id)
+    except Exception:
+        logger.warning("SpiceDB check failed, skipping authz")
+        return
+    if granted:
         return
     raise Forbidden(f"{permission} permission required")
 
