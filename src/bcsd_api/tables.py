@@ -102,6 +102,44 @@ payment_statuses = Table(
     Column("name", String, primary_key=True),
 )
 
+recruitment_periods = Table(
+    "recruitment_periods", metadata,
+    Column("id", String, primary_key=True),
+    Column("title", String, nullable=False),
+    Column("type", String, nullable=False),
+    Column("start_date", String, nullable=False),
+    Column("end_date", String, nullable=False),
+    Column("is_active", String, server_default="true"),
+    Column("created_by", String, ForeignKey("members.id")),
+    Column("created_at", String),
+    Column("updated_at", String),
+)
+
+forms = Table(
+    "forms", metadata,
+    Column("id", String, primary_key=True),
+    Column("title", String, nullable=False),
+    Column("description", Text),
+    Column("recruitment_id", String, ForeignKey("recruitment_periods.id")),
+    Column("type", String, nullable=False),
+    Column("is_active", String, server_default="true"),
+    Column("created_by", String, ForeignKey("members.id")),
+    Column("created_at", String),
+    Column("updated_at", String),
+)
+
+form_questions = Table(
+    "form_questions", metadata,
+    Column("id", String, primary_key=True),
+    Column("form_id", String, ForeignKey("forms.id", ondelete="CASCADE")),
+    Column("label", String, nullable=False),
+    Column("type", String, nullable=False),
+    Column("options", Text),
+    Column("required", String, server_default="true"),
+    Column("sort_order", Integer, nullable=False),
+    Column("created_at", String),
+)
+
 app_settings = Table(
     "app_settings", metadata,
     Column("key", String, primary_key=True),

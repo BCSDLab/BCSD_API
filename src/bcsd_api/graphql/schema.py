@@ -6,7 +6,11 @@ from graphql import GraphQLError
 from strawberry.types import ExecutionContext
 
 from bcsd_api.exception.base import AppException
+from bcsd_api.form import resolvers as form_resolvers
+from bcsd_api.form.types import FormType
 from bcsd_api.member import resolvers as member_resolvers
+from bcsd_api.recruit import resolvers as recruit_resolvers
+from bcsd_api.recruit.types import PeriodType
 from bcsd_api.setting import resolvers as setting_resolvers
 from bcsd_api.member.types import (
     FiltersType,
@@ -47,6 +51,13 @@ class Query:
 
     setting: str | None = strawberry.field(resolver=setting_resolvers.resolve_setting)
 
+    periods: list[PeriodType] = strawberry.field(resolver=recruit_resolvers.resolve_periods)
+    period: PeriodType = strawberry.field(resolver=recruit_resolvers.resolve_period)
+    active_period: PeriodType | None = strawberry.field(resolver=recruit_resolvers.resolve_active_period)
+
+    form: FormType = strawberry.field(resolver=form_resolvers.resolve_form)
+    forms: list[FormType] = strawberry.field(resolver=form_resolvers.resolve_forms)
+
 
 @strawberry.type
 class Mutation:
@@ -56,6 +67,12 @@ class Mutation:
     delete_link: bool = strawberry.mutation(resolver=link_resolvers.resolve_delete)
 
     set_setting: bool = strawberry.mutation(resolver=setting_resolvers.resolve_set_setting)
+
+    create_period: PeriodType = strawberry.mutation(resolver=recruit_resolvers.resolve_create_period)
+    update_period: PeriodType = strawberry.mutation(resolver=recruit_resolvers.resolve_update_period)
+
+    create_form: FormType = strawberry.mutation(resolver=form_resolvers.resolve_create_form)
+    update_form: FormType = strawberry.mutation(resolver=form_resolvers.resolve_update_form)
 
 
 logger = logging.getLogger("strawberry.execution")

@@ -11,7 +11,9 @@ from .database import create_engine, get_connection
 from .email import ResendSender
 from .email.sender import EmailSender
 from .exception import Unauthorized
+from .form.pg_repository import PgFormRepository, PgQuestionRepository
 from .member.pg_repository import PgMemberRepository
+from .recruit.pg_repository import PgRecruitRepository
 from .setting.pg_repository import PgSettingRepository
 from .sheets.client import SheetsClient
 from .shorten.pg_repository import PgLinkRepository
@@ -70,6 +72,18 @@ def get_link_repo(conn: Connection = Depends(get_conn)) -> PgLinkRepository:
 
 def get_setting_repo(conn: Connection = Depends(get_conn)) -> PgSettingRepository:
     return PgSettingRepository(conn)
+
+
+def get_recruit_repo(conn: Connection = Depends(get_conn)) -> PgRecruitRepository:
+    return PgRecruitRepository(conn)
+
+
+def get_form_repo(conn: Connection = Depends(get_conn)) -> PgFormRepository:
+    return PgFormRepository(conn)
+
+
+def get_question_repo(conn: Connection = Depends(get_conn)) -> PgQuestionRepository:
+    return PgQuestionRepository(conn)
 
 
 def current_user(
