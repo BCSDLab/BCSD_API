@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from datetime import datetime
 
 from bcsd_api.exception import BadRequest, Conflict, Forbidden, NotFound
@@ -124,7 +125,7 @@ def approve(
     app_repo: PgApplicationRepository,
     member_repo: PgMemberRepository,
     form_repo: PgFormRepository,
-    app_ids: list[str],
+    app_ids: Sequence[str],
     admin_id: str,
 ) -> list[ApplicationResponse]:
     now = _now()
