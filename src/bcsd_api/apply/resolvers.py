@@ -2,14 +2,23 @@ import strawberry
 from strawberry.types import Info
 
 from bcsd_api.authz.check import require_fee_edit
+from bcsd_api.filter.applications import ApplicationFilter
+from bcsd_api.filter.base import apply_filter
 from bcsd_api.graphql.context import GqlContext, require_user
+from bcsd_api.graphql.convert import to_filter
 
 from . import service
-from .schema import AnswerRequest
-from .types import AnswerType, ApplicationType, SubmitInput
+from .schema import AnswerRequest, ApplicationResponse
+from .types import (
+    AnswerType,
+    ApplicationFilterInput,
+    ApplicationType,
+    PagedApplications,
+    SubmitInput,
+)
 
 
-def _to_app_type(app) -> ApplicationType:
+def _to_app_type(app: ApplicationResponse) -> ApplicationType:
     data = app.model_dump()
     data["answers"] = [AnswerType(**a) for a in data["answers"]]
     return ApplicationType(**data)
@@ -28,13 +37,21 @@ def resolve_submit(info: Info[GqlContext, None], input: SubmitInput) -> Applicat
 
 
 def resolve_applications(
-    info: Info[GqlContext, None], form_id: str,
-) -> list[ApplicationType]:
+    info: Info[GqlContext, None],
+    filter: ApplicationFilterInput | None = None,
+) -> PagedApplications:
     user = require_user(info.context)
     require_fee_edit(info.context.authz, user["sub"])
     ctx = info.context
-    apps = service.list_applications(ctx.app_repo, ctx.ans_repo, form_id)
-    return [_to_app_type(a) for a in apps]
+    filt = to_filter(filter, ApplicationFilter) if filter else ApplicationFilter.model_validate({})
+    rows = ctx.app_repo.find_all()
+    apps = [service._with_answers(ctx.ans_repo, r) for r in rows]
+    paged = apply_filter([a.model_dump() for a in apps], filt)
+    items = [_to_app_type(ApplicationResponse(**r)) for r in paged.items]
+    return PagedApplications(
+        items=items, total=paged.total,
+        page=paged.page, size=paged.size,
+    )
 
 
 def resolve_application(
