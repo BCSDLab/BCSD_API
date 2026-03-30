@@ -127,6 +127,7 @@ def approve(
     form_repo: PgFormRepository,
     app_ids: Sequence[str],
     admin_id: str,
+    authz=None,
 ) -> list[ApplicationResponse]:
     now = _now()
     result = []
@@ -141,9 +142,22 @@ def approve(
             "approved_by": admin_id, "updated_at": now,
         })
         member_repo.update_status(row["member_id"], new_status)
+        _add_org_relation(authz, row["member_id"], new_status)
         row.update({"status": "승인", "approved_at": now, "approved_by": admin_id})
         result.append(ApplicationResponse(**row))
     return result
+
+
+_STATUS_RELATION = {"Beginner": "beginner", "Regular": "regular"}
+
+
+def _add_org_relation(authz, member_id: str, status: str) -> None:
+    if not authz:
+        return
+    relation = _STATUS_RELATION.get(status)
+    if not relation:
+        return
+    authz.add_relation("organization", "bcsdlab", relation, member_id)
 
 
 def cancel(

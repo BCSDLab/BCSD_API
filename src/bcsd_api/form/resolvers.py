@@ -1,6 +1,7 @@
 import strawberry
 from strawberry.types import Info
 
+from bcsd_api.authz.check import require_admin
 from bcsd_api.graphql.context import GqlContext, require_user
 from bcsd_api.graphql.convert import from_model
 
@@ -46,6 +47,7 @@ def resolve_create_form(
     info: Info[GqlContext, None], input: CreateFormInput,
 ) -> FormType:
     user = require_user(info.context)
+    require_admin(info.context.authz, user["sub"])
     ctx = info.context
     req = CreateFormRequest(
         title=input.title, description=input.description,
@@ -59,7 +61,8 @@ def resolve_create_form(
 def resolve_update_form(
     info: Info[GqlContext, None], id: strawberry.ID, input: UpdateFormInput,
 ) -> FormType:
-    require_user(info.context)
+    user = require_user(info.context)
+    require_admin(info.context.authz, user["sub"])
     ctx = info.context
     questions = None
     if input.questions is not None:

@@ -1,6 +1,7 @@
 import strawberry
 from strawberry.types import Info
 
+from bcsd_api.authz.check import require_admin
 from bcsd_api.graphql.context import GqlContext, require_user
 from bcsd_api.graphql.convert import from_model
 
@@ -35,6 +36,7 @@ def resolve_create_period(
     info: Info[GqlContext, None], input: CreatePeriodInput,
 ) -> PeriodType:
     user = require_user(info.context)
+    require_admin(info.context.authz, user["sub"])
     req = CreatePeriodRequest(
         title=input.title, type=input.type,
         start_date=input.start_date, end_date=input.end_date,
@@ -46,7 +48,8 @@ def resolve_create_period(
 def resolve_update_period(
     info: Info[GqlContext, None], id: strawberry.ID, input: UpdatePeriodInput,
 ) -> PeriodType:
-    require_user(info.context)
+    user = require_user(info.context)
+    require_admin(info.context.authz, user["sub"])
     req = UpdatePeriodRequest(
         title=input.title, start_date=input.start_date,
         end_date=input.end_date, is_active=input.is_active,
