@@ -4,31 +4,52 @@ from bcsd_api.graphql.convert import SortFieldInput
 
 
 @strawberry.type
-class AnswerType:
-    id: str
+class ApplicationAnswer:
     question_id: str
     value: str
 
 
 @strawberry.type
-class ApplicationType:
+class PaymentInfo:
+    bank: str
+    account: str
+    amount: int
+    holder: str
+
+
+@strawberry.type
+class MyApplication:
     id: str
-    form_id: str
-    member_id: str
     status: str
-    submitted_at: str | None
-    approved_at: str | None
-    approved_by: str | None
-    updated_at: str | None
-    answers: list[AnswerType]
+    form_template_id: str
+    track: str
+    submitted_at: str
+    answers: list[ApplicationAnswer]
+    payment_info: PaymentInfo | None
+
+
+@strawberry.type
+class ApplicationListItem:
+    id: str
+    applicant_name: str
+    applicant_email: str
+    track: str
+    status: str
+    submitted_at: str
 
 
 @strawberry.type
 class PagedApplications:
-    items: list[ApplicationType]
+    items: list[ApplicationListItem]
     total: int
     page: int
     size: int
+
+
+@strawberry.type
+class BatchResult:
+    count: int
+    ids: list[str]
 
 
 @strawberry.input
@@ -39,8 +60,9 @@ class AnswerInput:
 
 @strawberry.input
 class SubmitInput:
-    form_id: str
+    form_template_id: str
     answers: list[AnswerInput]
+    track: str
 
 
 @strawberry.input
@@ -48,6 +70,5 @@ class ApplicationFilterInput:
     page: int = 1
     size: int = 20
     sorts: list[SortFieldInput] | None = None
-    status: list[str] | None = None
-    form_id: str | None = None
-    member_id: str | None = None
+    status: str | None = None
+    track: str | None = None

@@ -3,38 +3,45 @@ from strawberry.types import Info
 
 from bcsd_api.authz.check import require_admin
 from bcsd_api.graphql.context import GqlContext, require_user
-from bcsd_api.graphql.convert import from_model
 
 from . import service
 from .schema import CreatePeriodRequest, UpdatePeriodRequest
-from .types import CreatePeriodInput, PeriodType, UpdatePeriodInput
+from .types import CreatePeriodInput, RecruitmentPeriodType, UpdatePeriodInput
 
 
-def resolve_periods(info: Info[GqlContext, None]) -> list[PeriodType]:
+def _to_period(p) -> RecruitmentPeriodType:
+    return RecruitmentPeriodType(
+        id=p.id, type=p.type,
+        start_date=p.start_date, end_date=p.end_date,
+        is_active=p.is_active == "true",
+    )
+
+
+def resolve_periods(info: Info[GqlContext, None]) -> list[RecruitmentPeriodType]:
     require_user(info.context)
     periods = service.list_periods(info.context.recruit_repo)
-    return [from_model(p, PeriodType) for p in periods]
+    return [_to_period(p) for p in periods]
 
 
-def resolve_period(info: Info[GqlContext, None], id: strawberry.ID) -> PeriodType:
+def resolve_period(info: Info[GqlContext, None], id: strawberry.ID) -> RecruitmentPeriodType:
     require_user(info.context)
     p = service.get_period(info.context.recruit_repo, id)
-    return from_model(p, PeriodType)
+    return _to_period(p)
 
 
-def resolve_active_period(
+def resolve_recruitment_period(
     info: Info[GqlContext, None], type: str,
-) -> PeriodType | None:
+) -> RecruitmentPeriodType | None:
     require_user(info.context)
     p = service.active_period(info.context.recruit_repo, type)
     if not p:
         return None
-    return from_model(p, PeriodType)
+    return _to_period(p)
 
 
 def resolve_create_period(
     info: Info[GqlContext, None], input: CreatePeriodInput,
-) -> PeriodType:
+) -> RecruitmentPeriodType:
     user = require_user(info.context)
     require_admin(info.context.authz, user["sub"])
     req = CreatePeriodRequest(
@@ -42,17 +49,20 @@ def resolve_create_period(
         start_date=input.start_date, end_date=input.end_date,
     )
     p = service.create_period(info.context.recruit_repo, req, user["sub"])
-    return from_model(p, PeriodType)
+    return _to_period(p)
 
 
 def resolve_update_period(
     info: Info[GqlContext, None], id: strawberry.ID, input: UpdatePeriodInput,
-) -> PeriodType:
+) -> RecruitmentPeriodType:
     user = require_user(info.context)
     require_admin(info.context.authz, user["sub"])
+    is_active = None
+    if input.is_active is not None:
+        is_active = "true" if input.is_active else "false"
     req = UpdatePeriodRequest(
         title=input.title, start_date=input.start_date,
-        end_date=input.end_date, is_active=input.is_active,
+        end_date=input.end_date, is_active=is_active,
     )
     p = service.update_period(info.context.recruit_repo, id, req)
-    return from_model(p, PeriodType)
+    return _to_period(p)

@@ -6,30 +6,31 @@ from graphql import GraphQLError
 from strawberry.types import ExecutionContext
 
 from bcsd_api.apply import resolvers as apply_resolvers
-from bcsd_api.apply.types import ApplicationType, PagedApplications
+from bcsd_api.apply.types import (
+    ApplicationType,
+    BatchResult,
+    MyApplication,
+    PagedApplications,
+)
 from bcsd_api.exception.base import AppException
 from bcsd_api.form import resolvers as form_resolvers
-from bcsd_api.form.types import FormType
+from bcsd_api.form.types import FormTemplateType
 from bcsd_api.member import resolvers as member_resolvers
-from bcsd_api.recruit import resolvers as recruit_resolvers
-from bcsd_api.recruit.types import PeriodType
-from bcsd_api.setting import resolvers as setting_resolvers
 from bcsd_api.member.types import (
     FiltersType,
     MeType,
     MemberDetailType,
-    MemberFilterInput,
     PagedMembers,
 )
+from bcsd_api.recruit import resolvers as recruit_resolvers
+from bcsd_api.recruit.types import RecruitmentPeriodType
+from bcsd_api.setting import resolvers as setting_resolvers
 from bcsd_api.shorten import resolvers as link_resolvers
 from bcsd_api.shorten.types import (
-    CreateLinkInput,
     LinkDetailType,
-    LinkFilterInput,
     LinkFiltersType,
     LinkType,
     PagedLinks,
-    UpdateLinkInput,
 )
 
 from .errors import AppErrorExtension
@@ -53,16 +54,14 @@ class Query:
 
     setting: str | None = strawberry.field(resolver=setting_resolvers.resolve_setting)
 
-    periods: list[PeriodType] = strawberry.field(resolver=recruit_resolvers.resolve_periods)
-    period: PeriodType = strawberry.field(resolver=recruit_resolvers.resolve_period)
-    active_period: PeriodType | None = strawberry.field(resolver=recruit_resolvers.resolve_active_period)
+    periods: list[RecruitmentPeriodType] = strawberry.field(resolver=recruit_resolvers.resolve_periods)
+    recruitment_period: RecruitmentPeriodType | None = strawberry.field(resolver=recruit_resolvers.resolve_recruitment_period)
 
-    form: FormType = strawberry.field(resolver=form_resolvers.resolve_form)
-    forms: list[FormType] = strawberry.field(resolver=form_resolvers.resolve_forms)
+    form_template: FormTemplateType | None = strawberry.field(resolver=form_resolvers.resolve_form_template)
+    forms: list[FormTemplateType] = strawberry.field(resolver=form_resolvers.resolve_forms)
 
+    my_application: MyApplication | None = strawberry.field(resolver=apply_resolvers.resolve_my_application)
     applications: PagedApplications = strawberry.field(resolver=apply_resolvers.resolve_applications)
-    application: ApplicationType = strawberry.field(resolver=apply_resolvers.resolve_application)
-    my_applications: list[ApplicationType] = strawberry.field(resolver=apply_resolvers.resolve_my_applications)
 
 
 @strawberry.type
@@ -74,16 +73,16 @@ class Mutation:
 
     set_setting: bool = strawberry.mutation(resolver=setting_resolvers.resolve_set_setting)
 
-    create_period: PeriodType = strawberry.mutation(resolver=recruit_resolvers.resolve_create_period)
-    update_period: PeriodType = strawberry.mutation(resolver=recruit_resolvers.resolve_update_period)
+    create_period: RecruitmentPeriodType = strawberry.mutation(resolver=recruit_resolvers.resolve_create_period)
+    update_period: RecruitmentPeriodType = strawberry.mutation(resolver=recruit_resolvers.resolve_update_period)
 
-    create_form: FormType = strawberry.mutation(resolver=form_resolvers.resolve_create_form)
-    update_form: FormType = strawberry.mutation(resolver=form_resolvers.resolve_update_form)
+    create_form: FormTemplateType = strawberry.mutation(resolver=form_resolvers.resolve_create_form)
+    update_form: FormTemplateType = strawberry.mutation(resolver=form_resolvers.resolve_update_form)
 
-    submit_application: ApplicationType = strawberry.mutation(resolver=apply_resolvers.resolve_submit)
-    confirm_payment: ApplicationType = strawberry.mutation(resolver=apply_resolvers.resolve_confirm_payment)
-    approve_applications: list[ApplicationType] = strawberry.mutation(resolver=apply_resolvers.resolve_approve)
-    cancel_application: bool = strawberry.mutation(resolver=apply_resolvers.resolve_cancel)
+    submit_application: MyApplication = strawberry.mutation(resolver=apply_resolvers.resolve_submit)
+    cancel_application: MyApplication = strawberry.mutation(resolver=apply_resolvers.resolve_cancel)
+    approve_application: MyApplication = strawberry.mutation(resolver=apply_resolvers.resolve_approve)
+    batch_approve_applications: BatchResult = strawberry.mutation(resolver=apply_resolvers.resolve_batch_approve)
 
 
 logger = logging.getLogger("strawberry.execution")

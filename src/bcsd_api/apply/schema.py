@@ -9,21 +9,35 @@ class AnswerRequest(BaseModel):
 class SubmitRequest(BaseModel):
     form_id: str
     answers: list[AnswerRequest]
+    track: str
 
 
 class AnswerResponse(BaseModel):
-    id: str
     question_id: str
     value: str
 
 
-class ApplicationResponse(BaseModel):
+class PaymentInfoResponse(BaseModel):
+    bank: str
+    account: str
+    amount: int
+    holder: str
+
+
+class MyApplicationResponse(BaseModel):
     id: str
-    form_id: str
-    member_id: str
     status: str
-    submitted_at: str | None = None
-    approved_at: str | None = None
-    approved_by: str | None = None
-    updated_at: str | None = None
-    answers: list[AnswerResponse] = []
+    form_template_id: str
+    track: str
+    submitted_at: str
+    answers: list[AnswerResponse]
+    payment_info: PaymentInfoResponse | None = None
+
+
+class ApplicationListResponse(BaseModel):
+    id: str
+    applicant_name: str
+    applicant_email: str
+    track: str
+    status: str
+    submitted_at: str
