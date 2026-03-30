@@ -11,6 +11,7 @@ from .database import create_engine, get_connection
 from .email import ResendSender
 from .email.sender import EmailSender
 from .exception import Unauthorized
+from .apply.pg_repository import PgAnswerRepository, PgApplicationRepository
 from .form.pg_repository import PgFormRepository, PgQuestionRepository
 from .member.pg_repository import PgMemberRepository
 from .recruit.pg_repository import PgRecruitRepository
@@ -84,6 +85,14 @@ def get_form_repo(conn: Connection = Depends(get_conn)) -> PgFormRepository:
 
 def get_question_repo(conn: Connection = Depends(get_conn)) -> PgQuestionRepository:
     return PgQuestionRepository(conn)
+
+
+def get_app_repo(conn: Connection = Depends(get_conn)) -> PgApplicationRepository:
+    return PgApplicationRepository(conn)
+
+
+def get_ans_repo(conn: Connection = Depends(get_conn)) -> PgAnswerRepository:
+    return PgAnswerRepository(conn)
 
 
 def current_user(

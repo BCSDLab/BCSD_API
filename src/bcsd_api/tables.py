@@ -140,6 +140,26 @@ form_questions = Table(
     Column("created_at", String),
 )
 
+applications = Table(
+    "applications", metadata,
+    Column("id", String, primary_key=True),
+    Column("form_id", String, ForeignKey("forms.id")),
+    Column("member_id", String, ForeignKey("members.id")),
+    Column("status", String, nullable=False, server_default="납부_대기"),
+    Column("submitted_at", String),
+    Column("approved_at", String),
+    Column("approved_by", String),
+    Column("updated_at", String),
+)
+
+application_answers = Table(
+    "application_answers", metadata,
+    Column("id", String, primary_key=True),
+    Column("application_id", String, ForeignKey("applications.id", ondelete="CASCADE")),
+    Column("question_id", String, ForeignKey("form_questions.id")),
+    Column("value", Text, nullable=False),
+)
+
 app_settings = Table(
     "app_settings", metadata,
     Column("key", String, primary_key=True),

@@ -5,6 +5,8 @@ from strawberry.fastapi import BaseContext
 from bcsd_api.auth import token as jwt_token
 from bcsd_api.config import Settings
 from bcsd_api.dependencies import (
+    get_ans_repo,
+    get_app_repo,
     get_conn,
     get_form_repo,
     get_link_repo,
@@ -15,6 +17,7 @@ from bcsd_api.dependencies import (
     get_settings,
 )
 from bcsd_api.exception import Unauthorized
+from bcsd_api.apply.pg_repository import PgAnswerRepository, PgApplicationRepository
 from bcsd_api.form.pg_repository import PgFormRepository, PgQuestionRepository
 from bcsd_api.member.pg_repository import PgMemberRepository
 from bcsd_api.recruit.pg_repository import PgRecruitRepository
@@ -26,7 +29,7 @@ class GqlContext(BaseContext):
     def __init__(
         self, conn, member_repo, link_repo,
         setting_repo, recruit_repo, form_repo, question_repo,
-        user,
+        app_repo, ans_repo, user,
     ):
         self.conn = conn
         self.member_repo = member_repo
@@ -35,6 +38,8 @@ class GqlContext(BaseContext):
         self.recruit_repo = recruit_repo
         self.form_repo = form_repo
         self.question_repo = question_repo
+        self.app_repo = app_repo
+        self.ans_repo = ans_repo
         self.user = user
 
 
@@ -61,6 +66,8 @@ async def context_getter(
     recruit_repo: PgRecruitRepository = Depends(get_recruit_repo),
     form_repo: PgFormRepository = Depends(get_form_repo),
     question_repo: PgQuestionRepository = Depends(get_question_repo),
+    app_repo: PgApplicationRepository = Depends(get_app_repo),
+    ans_repo: PgAnswerRepository = Depends(get_ans_repo),
 ) -> GqlContext:
     user = _try_auth(request, settings)
     return GqlContext(
@@ -71,5 +78,7 @@ async def context_getter(
         recruit_repo=recruit_repo,
         form_repo=form_repo,
         question_repo=question_repo,
+        app_repo=app_repo,
+        ans_repo=ans_repo,
         user=user,
     )

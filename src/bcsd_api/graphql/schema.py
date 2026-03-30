@@ -5,6 +5,8 @@ import strawberry
 from graphql import GraphQLError
 from strawberry.types import ExecutionContext
 
+from bcsd_api.apply import resolvers as apply_resolvers
+from bcsd_api.apply.types import ApplicationType
 from bcsd_api.exception.base import AppException
 from bcsd_api.form import resolvers as form_resolvers
 from bcsd_api.form.types import FormType
@@ -58,6 +60,10 @@ class Query:
     form: FormType = strawberry.field(resolver=form_resolvers.resolve_form)
     forms: list[FormType] = strawberry.field(resolver=form_resolvers.resolve_forms)
 
+    applications: list[ApplicationType] = strawberry.field(resolver=apply_resolvers.resolve_applications)
+    application: ApplicationType = strawberry.field(resolver=apply_resolvers.resolve_application)
+    my_applications: list[ApplicationType] = strawberry.field(resolver=apply_resolvers.resolve_my_applications)
+
 
 @strawberry.type
 class Mutation:
@@ -73,6 +79,11 @@ class Mutation:
 
     create_form: FormType = strawberry.mutation(resolver=form_resolvers.resolve_create_form)
     update_form: FormType = strawberry.mutation(resolver=form_resolvers.resolve_update_form)
+
+    submit_application: ApplicationType = strawberry.mutation(resolver=apply_resolvers.resolve_submit)
+    confirm_payment: ApplicationType = strawberry.mutation(resolver=apply_resolvers.resolve_confirm_payment)
+    approve_applications: list[ApplicationType] = strawberry.mutation(resolver=apply_resolvers.resolve_approve)
+    cancel_application: bool = strawberry.mutation(resolver=apply_resolvers.resolve_cancel)
 
 
 logger = logging.getLogger("strawberry.execution")
