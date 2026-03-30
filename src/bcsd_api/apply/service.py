@@ -116,7 +116,8 @@ def confirm_payment(
     if row["status"] != "납부_대기":
         raise BadRequest("application is not in payment pending status")
     app_repo.update_fields(app_id, {"status": "납부_완료", "updated_at": _now()})
-    return ApplicationResponse(**app_repo.find_by_id(app_id))
+    row["status"] = "납부_완료"
+    return ApplicationResponse(**row)
 
 
 def approve(
@@ -139,7 +140,8 @@ def approve(
             "approved_by": admin_id, "updated_at": now,
         })
         member_repo.update_status(row["member_id"], new_status)
-        result.append(ApplicationResponse(**app_repo.find_by_id(app_id)))
+        row.update({"status": "승인", "approved_at": now, "approved_by": admin_id})
+        result.append(ApplicationResponse(**row))
     return result
 
 

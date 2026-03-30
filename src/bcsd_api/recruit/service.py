@@ -29,11 +29,12 @@ def create_period(
 def update_period(
     repo: PgRecruitRepository, period_id: str, req: UpdatePeriodRequest,
 ) -> PeriodResponse:
-    _get_or_raise(repo, period_id)
+    row = _get_or_raise(repo, period_id)
     updates = req.model_dump(exclude_none=True)
     updates["updated_at"] = _now()
     repo.update_fields(period_id, updates)
-    return PeriodResponse(**repo.find_by_id(period_id))
+    row.update(updates)
+    return PeriodResponse(**row)
 
 
 def list_periods(repo: PgRecruitRepository) -> list[PeriodResponse]:
