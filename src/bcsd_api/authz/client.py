@@ -40,9 +40,10 @@ def _update(operation, res_type: str, res_id: str, relation: str, user_id: str) 
 
 
 def _resolve(call):
-    resolve = getattr(call, "result", None)
-    if resolve:
-        return resolve()
+    from grpc import Future
+
+    if isinstance(call, Future):
+        return call.result()
     return call
 
 
