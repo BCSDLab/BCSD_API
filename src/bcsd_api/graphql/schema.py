@@ -7,7 +7,6 @@ from strawberry.types import ExecutionContext
 
 from bcsd_api.apply import resolvers as apply_resolvers
 from bcsd_api.apply.types import (
-    ApplicationType,
     BatchResult,
     MyApplication,
     PagedApplications,
