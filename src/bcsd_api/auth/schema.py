@@ -31,6 +31,13 @@ class RegisterRequest(BaseModel):
     school_email: str
     phone: str
     track: str
+    grade: str
+
+
+class RegisterResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    routing: str
 
 
 class MeResponse(BaseModel):

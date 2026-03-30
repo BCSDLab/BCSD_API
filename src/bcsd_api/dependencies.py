@@ -12,6 +12,7 @@ from .email import ResendSender
 from .email.sender import EmailSender
 from .exception import Unauthorized
 from .member.pg_repository import PgMemberRepository
+from .setting.pg_repository import PgSettingRepository
 from .sheets.client import SheetsClient
 from .shorten.pg_repository import PgLinkRepository
 
@@ -65,6 +66,10 @@ def get_member_repo(conn: Connection = Depends(get_conn)) -> PgMemberRepository:
 
 def get_link_repo(conn: Connection = Depends(get_conn)) -> PgLinkRepository:
     return PgLinkRepository(conn)
+
+
+def get_setting_repo(conn: Connection = Depends(get_conn)) -> PgSettingRepository:
+    return PgSettingRepository(conn)
 
 
 def current_user(

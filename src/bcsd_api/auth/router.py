@@ -1,11 +1,12 @@
 from fastapi import APIRouter, Depends, Response
+from sqlalchemy import Connection
 
 from bcsd_api.config import Settings
 from bcsd_api.dependencies import (
-    current_user, get_email_sender, get_settings, get_sheets,
+    current_user, get_conn, get_email_sender, get_member_repo, get_settings,
 )
 from bcsd_api.email.sender import EmailSender
-from bcsd_api.sheets.client import SheetsClient
+from bcsd_api.member.pg_repository import PgMemberRepository
 
 from . import service
 from .schema import (
@@ -16,6 +17,7 @@ from .schema import (
     MeResponse,
     MessageResponse,
     RegisterRequest,
+    RegisterResponse,
     VerifyEmailRequest,
 )
 
@@ -39,9 +41,9 @@ def post_login(
     body: LoginRequest,
     response: Response,
     settings: Settings = Depends(get_settings),
-    sheets: SheetsClient = Depends(get_sheets),
+    repo: PgMemberRepository = Depends(get_member_repo),
 ) -> LoginResponse:
-    token = service.login(body.google_token, settings, sheets)
+    token = service.login(body.google_token, settings, repo)
     _set_cookie(response, token, settings)
     return LoginResponse(access_token=token)
 
@@ -61,20 +63,22 @@ def post_confirm(body: ConfirmEmailRequest) -> ConfirmEmailResponse:
     return ConfirmEmailResponse(verified=result)
 
 
-@router.post("/register", response_model=LoginResponse)
+@router.post("/register", response_model=RegisterResponse)
 def post_register(
     body: RegisterRequest,
     response: Response,
     settings: Settings = Depends(get_settings),
-    sheets: SheetsClient = Depends(get_sheets),
-) -> LoginResponse:
-    token = service.register(
+    repo: PgMemberRepository = Depends(get_member_repo),
+    conn: Connection = Depends(get_conn),
+) -> RegisterResponse:
+    token, routing = service.register(
         body.google_token, body.name, body.department,
         body.student_id, body.school_email,
-        body.phone, body.track, settings, sheets,
+        body.phone, body.track, body.grade,
+        settings, repo, conn,
     )
     _set_cookie(response, token, settings)
-    return LoginResponse(access_token=token)
+    return RegisterResponse(access_token=token, routing=routing)
 
 
 @router.get("/me", response_model=MeResponse)

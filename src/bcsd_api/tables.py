@@ -101,3 +101,11 @@ payment_statuses = Table(
     "payment_statuses", metadata,
     Column("name", String, primary_key=True),
 )
+
+app_settings = Table(
+    "app_settings", metadata,
+    Column("key", String, primary_key=True),
+    Column("value", String, nullable=False),
+    Column("updated_at", String),
+    Column("updated_by", String),
+)

@@ -7,6 +7,7 @@ from strawberry.types import ExecutionContext
 
 from bcsd_api.exception.base import AppException
 from bcsd_api.member import resolvers as member_resolvers
+from bcsd_api.setting import resolvers as setting_resolvers
 from bcsd_api.member.types import (
     FiltersType,
     MeType,
@@ -44,6 +45,8 @@ class Query:
     link: LinkDetailType = strawberry.field(resolver=link_resolvers.resolve_link)
     link_filters: LinkFiltersType = strawberry.field(resolver=link_resolvers.resolve_link_filters)
 
+    setting: str | None = strawberry.field(resolver=setting_resolvers.resolve_setting)
+
 
 @strawberry.type
 class Mutation:
@@ -51,6 +54,8 @@ class Mutation:
     update_link: LinkType = strawberry.mutation(resolver=link_resolvers.resolve_update)
     toggle_link: LinkType = strawberry.mutation(resolver=link_resolvers.resolve_toggle)
     delete_link: bool = strawberry.mutation(resolver=link_resolvers.resolve_delete)
+
+    set_setting: bool = strawberry.mutation(resolver=setting_resolvers.resolve_set_setting)
 
 
 logger = logging.getLogger("strawberry.execution")

@@ -1,20 +1,25 @@
 from datetime import datetime
 
+from sqlalchemy import Connection, select
+
 from bcsd_api.config import Settings
 from bcsd_api.email.sender import EmailSender
 from bcsd_api.exception import Conflict, Unauthorized
 from bcsd_api.id_gen import generate_id
-from bcsd_api.sheets.client import SheetsClient
+from bcsd_api.member.pg_repository import PgMemberRepository
+from bcsd_api.tables import app_settings
+from bcsd_api.timezone import KST
 
 from . import google as google_auth
 from . import token as jwt_token
 from . import verify
-from bcsd_api.timezone import KST
 
 
-def login(google_token: str, settings: Settings, sheets: SheetsClient) -> str:
+def login(
+    google_token: str, settings: Settings, repo: PgMemberRepository,
+) -> str:
     profile = google_auth.verify_token(google_token, settings.google_client_id)
-    member = sheets.find_row("members", "email", profile["email"])
+    member = repo.find_by_email(profile["email"])
     if not member:
         raise Unauthorized("member not found, registration required")
     payload = {"sub": member["id"], "email": profile["email"]}
@@ -30,26 +35,22 @@ def confirm_verify(email: str, code: str) -> bool:
 
 
 def register(
-    google_token: str,
-    name: str,
-    department: str,
-    student_id: str,
-    school_email: str,
-    phone: str,
-    track: str,
-    settings: Settings,
-    sheets: SheetsClient,
-) -> str:
+    google_token: str, name: str, department: str,
+    student_id: str, school_email: str, phone: str,
+    track: str, grade: str,
+    settings: Settings, repo: PgMemberRepository, conn: Connection,
+) -> tuple[str, str]:
     profile = google_auth.verify_token(google_token, settings.google_client_id)
-    _check_duplicate(profile["email"], sheets)
+    _check_duplicate(profile["email"], repo)
     member_id = generate_id("M")
     row = _build_row(
         member_id, name, profile["email"],
-        department, student_id, school_email, phone, track,
+        department, student_id, school_email, phone, track, grade,
     )
-    sheets.append_row("members", row)
-    payload = {"sub": member_id, "email": profile["email"]}
-    return _issue_jwt(payload, settings)
+    repo.create(row)
+    routing = _resolve_routing(grade, conn)
+    token = _issue_jwt({"sub": member_id, "email": profile["email"]}, settings)
+    return token, routing
 
 
 def _issue_jwt(payload: dict, settings: Settings) -> str:
@@ -59,8 +60,8 @@ def _issue_jwt(payload: dict, settings: Settings) -> str:
     )
 
 
-def _check_duplicate(email: str, sheets: SheetsClient) -> None:
-    if sheets.find_row("members", "email", email):
+def _check_duplicate(email: str, repo: PgMemberRepository) -> None:
+    if repo.find_by_email(email):
         raise Conflict("member already registered")
 
 
@@ -71,24 +72,34 @@ def _now_kst() -> str:
 def _build_row(
     member_id: str, name: str, email: str,
     department: str, student_id: str,
-    school_email: str, phone: str, track: str,
+    school_email: str, phone: str, track: str, grade: str,
 ) -> dict:
     now = _now_kst()
-    base = _base_fields(member_id, name, email)
-    extra = {
-        "department": department, "student_id": student_id,
-        "school_email": school_email, "phone": phone, "track": track,
-    }
-    timestamps = {"join_date": now, "last_updated": now}
-    return {**base, **extra, **timestamps}
-
-
-def _base_fields(member_id: str, name: str, email: str) -> dict:
     return {
-        "id": member_id,
-        "name": name,
-        "email": email,
-        "status": "Beginner",
-        "team": "",
-        "payment_status": "미납",
+        "id": member_id, "name": name, "email": email,
+        "department": department, "student_id": student_id,
+        "school_email": school_email, "phone": phone,
+        "track": track, "grade": grade,
+        "status": "Beginner", "team": "", "payment_status": "미납",
+        "join_date": now, "last_updated": now,
     }
+
+
+_GRADE_MAP = {"1학년": 1, "2학년": 2, "3학년": 3, "4학년": 4, "대학원": 5}
+
+
+def _resolve_routing(grade: str, conn: Connection) -> str:
+    threshold = _grade_threshold(conn)
+    level = _GRADE_MAP.get(grade, 1)
+    if level >= threshold:
+        return "conversion"
+    return "beginner"
+
+
+def _grade_threshold(conn: Connection) -> int:
+    row = conn.execute(
+        select(app_settings.c.value).where(app_settings.c.key == "grade_threshold"),
+    ).first()
+    if not row:
+        return 3
+    return int(row[0])

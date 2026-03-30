@@ -8,18 +8,21 @@ from bcsd_api.dependencies import (
     get_conn,
     get_link_repo,
     get_member_repo,
+    get_setting_repo,
     get_settings,
 )
 from bcsd_api.exception import Unauthorized
 from bcsd_api.member.pg_repository import PgMemberRepository
+from bcsd_api.setting.pg_repository import PgSettingRepository
 from bcsd_api.shorten.pg_repository import PgLinkRepository
 
 
 class GqlContext(BaseContext):
-    def __init__(self, conn, member_repo, link_repo, user):
+    def __init__(self, conn, member_repo, link_repo, setting_repo, user):
         self.conn = conn
         self.member_repo = member_repo
         self.link_repo = link_repo
+        self.setting_repo = setting_repo
         self.user = user
 
 
@@ -42,11 +45,13 @@ async def context_getter(
     conn: Connection = Depends(get_conn),
     member_repo: PgMemberRepository = Depends(get_member_repo),
     link_repo: PgLinkRepository = Depends(get_link_repo),
+    setting_repo: PgSettingRepository = Depends(get_setting_repo),
 ) -> GqlContext:
     user = _try_auth(request, settings)
     return GqlContext(
         conn=conn,
         member_repo=member_repo,
         link_repo=link_repo,
+        setting_repo=setting_repo,
         user=user,
     )
