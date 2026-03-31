@@ -162,6 +162,15 @@ application_answers = Table(
     Column("value", Text, nullable=False),
 )
 
+member_accounts = Table(
+    "member_accounts", metadata,
+    Column("id", String, primary_key=True),
+    Column("member_id", String, ForeignKey("members.id")),
+    Column("provider", String, nullable=False),
+    Column("provider_id", String, nullable=False),
+    Column("created_at", String),
+)
+
 app_settings = Table(
     "app_settings", metadata,
     Column("key", String, primary_key=True),

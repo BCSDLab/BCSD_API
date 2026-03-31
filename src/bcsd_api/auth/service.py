@@ -19,7 +19,7 @@ def login(
     google_token: str, settings: Settings, repo: PgMemberRepository,
 ) -> str:
     profile = google_auth.verify_token(google_token, settings.google_client_id)
-    member = repo.find_by_email(profile["email"])
+    member = repo.find_by_provider("google", profile["email"])
     if not member:
         raise Unauthorized("member not found, registration required")
     payload = {"sub": member["id"], "email": profile["email"]}
@@ -41,13 +41,16 @@ def register(
     settings: Settings, repo: PgMemberRepository, conn: Connection,
 ) -> tuple[str, str]:
     profile = google_auth.verify_token(google_token, settings.google_client_id)
-    _check_duplicate(profile["email"], school_email, repo)
+    _check_google(profile["email"], repo)
+    _check_school_email(school_email, repo)
     member_id = generate_id("M")
+    now = _now_kst()
     row = _build_row(
         member_id, name, profile["email"],
         department, student_id, school_email, phone, track, grade,
     )
     repo.create(row)
+    repo.add_account(generate_id("MA"), member_id, "google", profile["email"], now)
     routing = _resolve_routing(grade, conn)
     token = _issue_jwt({"sub": member_id, "email": profile["email"]}, settings)
     return token, routing
@@ -60,9 +63,12 @@ def _issue_jwt(payload: dict, settings: Settings) -> str:
     )
 
 
-def _check_duplicate(email: str, school_email: str, repo: PgMemberRepository) -> None:
-    if repo.find_by_email(email):
+def _check_google(email: str, repo: PgMemberRepository) -> None:
+    if repo.find_account("google", email):
         raise Conflict("이미 가입된 Google 계정입니다")
+
+
+def _check_school_email(school_email: str, repo: PgMemberRepository) -> None:
     if repo.find_by_school_email(school_email):
         raise Conflict("이미 가입된 학교 이메일입니다")
 
