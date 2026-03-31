@@ -30,7 +30,7 @@ class RegisterRequest(BaseModel):
     student_id: str
     school_email: str
     phone: str
-    track: str
+    track: str | None = None
     grade: str
 
 

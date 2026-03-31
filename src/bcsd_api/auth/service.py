@@ -37,7 +37,7 @@ def confirm_verify(email: str, code: str) -> bool:
 def register(
     google_token: str, name: str, department: str,
     student_id: str, school_email: str, phone: str,
-    track: str, grade: str,
+    track: str | None, grade: str,
     settings: Settings, repo: PgMemberRepository, conn: Connection,
 ) -> tuple[str, str]:
     profile = google_auth.verify_token(google_token, settings.google_client_id)
@@ -72,14 +72,14 @@ def _now_kst() -> str:
 def _build_row(
     member_id: str, name: str, email: str,
     department: str, student_id: str,
-    school_email: str, phone: str, track: str, grade: str,
+    school_email: str, phone: str, track: str | None, grade: str,
 ) -> dict:
     now = _now_kst()
     return {
         "id": member_id, "name": name, "email": email,
         "department": department, "student_id": student_id,
         "school_email": school_email, "phone": phone,
-        "track": track, "grade": grade,
+        "track": track or "", "grade": grade,
         "status": "Beginner", "team": "", "payment_status": "미납",
         "join_date": now, "last_updated": now,
     }
