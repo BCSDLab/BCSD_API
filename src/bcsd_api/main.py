@@ -6,10 +6,10 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .auth.router import router as auth_router
+from .global_.auth.router import router as auth_router
 from .dependencies import get_authz, get_settings
-from .exception import register_handlers
-from .shorten.redirect import router as redirect_router
+from .global_.exception import register_handlers
+from .domain.shorten.redirect import router as redirect_router
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +39,7 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
 def _init_pg(settings) -> None:
     from sqlalchemy import text
 
-    from .core.database import create_engine
+    from .common.database import create_engine
 
     engine = create_engine(settings.database_url)
     with engine.connect() as conn:
@@ -57,8 +57,8 @@ def create_app() -> FastAPI:
         redoc_url=None,
     )
     settings = get_settings()
-    from .core import slack_log
-    slack_log.setup(settings.slack_bot_token, settings.slack_error_channel)
+    from .infra import slack
+    slack.setup(settings.slack_bot_token, settings.slack_error_channel)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins.split(","),
@@ -84,7 +84,6 @@ def _mount_graphql(app: FastAPI) -> None:
 
 
 app = create_app()
-
 
 if __name__ == "__main__":
     import uvicorn

@@ -4,19 +4,19 @@ from functools import lru_cache
 from fastapi import Depends, Request
 from sqlalchemy import Connection
 
-from .auth import token as jwt_token
-from .authz.client import AuthzClient
-from .core.config import Settings
-from .core.database import create_engine, get_connection
-from .email import ResendSender
-from .email.sender import EmailSender
-from .exception import Unauthorized
-from .apply.pg_repository import PgAnswerRepository, PgApplicationRepository
-from .form.pg_repository import PgFormRepository, PgQuestionRepository
-from .member.pg_repository import PgMemberRepository
-from .recruit.pg_repository import PgRecruitRepository
-from .setting.pg_repository import PgSettingRepository
-from .shorten.pg_repository import PgLinkRepository
+from .global_.auth import token as jwt_token
+from .global_.authz.client import AuthzClient
+from .common.config import Settings
+from .common.database import create_engine, get_connection
+from .infra.email import ResendSender
+from .infra.email.sender import EmailSender
+from .global_.exception import Unauthorized
+from .domain.apply.repository import PgAnswerRepository, PgApplicationRepository
+from .domain.form.repository import PgFormRepository, PgQuestionRepository
+from .domain.member.repository import PgMemberRepository
+from .domain.recruit.repository import PgRecruitRepository
+from .domain.setting.repository import PgSettingRepository
+from .domain.shorten.repository import PgLinkRepository
 
 
 @lru_cache

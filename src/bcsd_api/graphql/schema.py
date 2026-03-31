@@ -5,27 +5,27 @@ import strawberry
 from graphql import GraphQLError
 from strawberry.types import ExecutionContext
 
-from bcsd_api.apply import resolvers as apply_resolvers
-from bcsd_api.apply.types import (
+from bcsd_api.domain.apply import resolver as apply_resolvers
+from bcsd_api.domain.apply.types import (
     BatchResult,
     MyApplication,
     PagedApplications,
 )
-from bcsd_api.exception.base import AppException
-from bcsd_api.form import resolvers as form_resolvers
-from bcsd_api.form.types import FormTemplateType
-from bcsd_api.member import resolvers as member_resolvers
-from bcsd_api.member.types import (
+from bcsd_api.global_.exception.base import AppException
+from bcsd_api.domain.form import resolver as form_resolvers
+from bcsd_api.domain.form.types import FormTemplateType
+from bcsd_api.domain.member import resolver as member_resolvers
+from bcsd_api.domain.member.types import (
     FiltersType,
     MeType,
     MemberDetailType,
     PagedMembers,
 )
-from bcsd_api.recruit import resolvers as recruit_resolvers
-from bcsd_api.recruit.types import RecruitmentPeriodType
-from bcsd_api.setting import resolvers as setting_resolvers
-from bcsd_api.shorten import resolvers as link_resolvers
-from bcsd_api.shorten.types import (
+from bcsd_api.domain.recruit import resolver as recruit_resolvers
+from bcsd_api.domain.recruit.types import RecruitmentPeriodType
+from bcsd_api.domain.setting import resolver as setting_resolvers
+from bcsd_api.domain.shorten import resolver as link_resolvers
+from bcsd_api.domain.shorten.types import (
     LinkDetailType,
     LinkFiltersType,
     LinkType,

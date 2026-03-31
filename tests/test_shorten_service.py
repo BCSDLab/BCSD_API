@@ -2,15 +2,15 @@ import re
 
 
 def test_generate_code_format():
-    from bcsd_api.shorten.service import _generate_code
+    from bcsd_api.domain.shorten.service import _generate_code
     code = _generate_code()
     assert len(code) == 6
     assert re.match(r"^[a-z0-9]{6}$", code)
 
 
 def test_create_link_random_code(mocker):
-    from bcsd_api.shorten.service import create
-    from bcsd_api.shorten.schema import CreateRequest
+    from bcsd_api.domain.shorten.service import create
+    from bcsd_api.domain.shorten.model import CreateRequest
 
     repo = mocker.MagicMock()
     repo.find_by_code.return_value = None
@@ -25,8 +25,8 @@ def test_create_link_random_code(mocker):
 
 
 def test_create_link_custom_code(mocker):
-    from bcsd_api.shorten.service import create
-    from bcsd_api.shorten.schema import CreateRequest
+    from bcsd_api.domain.shorten.service import create
+    from bcsd_api.domain.shorten.model import CreateRequest
 
     repo = mocker.MagicMock()
     repo.find_by_code.return_value = None
@@ -38,9 +38,9 @@ def test_create_link_custom_code(mocker):
 
 def test_create_link_custom_code_conflict(mocker):
     import pytest
-    from bcsd_api.shorten.service import create
-    from bcsd_api.shorten.schema import CreateRequest
-    from bcsd_api.exception import Conflict
+    from bcsd_api.domain.shorten.service import create
+    from bcsd_api.domain.shorten.model import CreateRequest
+    from bcsd_api.global_.exception import Conflict
 
     repo = mocker.MagicMock()
     repo.find_by_code.return_value = {"id": "existing"}
@@ -50,7 +50,7 @@ def test_create_link_custom_code_conflict(mocker):
 
 
 def test_list_links(mocker):
-    from bcsd_api.shorten.service import list_links
+    from bcsd_api.domain.shorten.service import list_links
     from bcsd_api.filter.links import LinkFilter
 
     repo = mocker.MagicMock()
@@ -66,7 +66,7 @@ def test_list_links(mocker):
 
 
 def test_get_detail_with_clicks(mocker):
-    from bcsd_api.shorten.service import get_detail
+    from bcsd_api.domain.shorten.service import get_detail
 
     repo = mocker.MagicMock()
     repo.find_by_id.return_value = {
@@ -87,8 +87,8 @@ def test_get_detail_with_clicks(mocker):
 
 def test_get_detail_not_found(mocker):
     import pytest
-    from bcsd_api.shorten.service import get_detail
-    from bcsd_api.exception import NotFound
+    from bcsd_api.domain.shorten.service import get_detail
+    from bcsd_api.global_.exception import NotFound
 
     repo = mocker.MagicMock()
     repo.find_by_id.return_value = None
@@ -97,8 +97,8 @@ def test_get_detail_not_found(mocker):
 
 
 def test_update_link(mocker):
-    from bcsd_api.shorten.service import update
-    from bcsd_api.shorten.schema import UpdateRequest
+    from bcsd_api.domain.shorten.service import update
+    from bcsd_api.domain.shorten.model import UpdateRequest
 
     repo = mocker.MagicMock()
     repo.find_by_id.return_value = {
@@ -113,7 +113,7 @@ def test_update_link(mocker):
 
 
 def test_toggle_expire(mocker):
-    from bcsd_api.shorten.service import toggle
+    from bcsd_api.domain.shorten.service import toggle
 
     repo = mocker.MagicMock()
     repo.find_by_id.return_value = {
@@ -128,7 +128,7 @@ def test_toggle_expire(mocker):
 
 
 def test_toggle_reopen(mocker):
-    from bcsd_api.shorten.service import toggle
+    from bcsd_api.domain.shorten.service import toggle
 
     repo = mocker.MagicMock()
     repo.find_by_id.return_value = {
@@ -143,7 +143,7 @@ def test_toggle_reopen(mocker):
 
 
 def test_delete_link(mocker):
-    from bcsd_api.shorten.service import delete
+    from bcsd_api.domain.shorten.service import delete
 
     repo = mocker.MagicMock()
     repo.find_by_id.return_value = {"id": "L-1", "creator_id": "M-1"}
@@ -154,8 +154,8 @@ def test_delete_link(mocker):
 
 def test_resolve_expired_link(mocker):
     import pytest
-    from bcsd_api.shorten.service import resolve
-    from bcsd_api.exception import Gone
+    from bcsd_api.domain.shorten.service import resolve
+    from bcsd_api.global_.exception import Gone
 
     repo = mocker.MagicMock()
     repo.find_by_code.return_value = {
@@ -167,7 +167,7 @@ def test_resolve_expired_link(mocker):
 
 
 def test_resolve_active_link(mocker):
-    from bcsd_api.shorten.service import resolve
+    from bcsd_api.domain.shorten.service import resolve
 
     repo = mocker.MagicMock()
     repo.find_by_code.return_value = {
@@ -180,7 +180,7 @@ def test_resolve_active_link(mocker):
 
 
 def test_get_filters(mocker):
-    from bcsd_api.shorten.service import get_filters
+    from bcsd_api.domain.shorten.service import get_filters
 
     repo = mocker.MagicMock()
     repo.find_all.return_value = [

@@ -2,7 +2,7 @@ from graphql import GraphQLError
 from pydantic import ValidationError
 from strawberry.extensions import SchemaExtension
 
-from bcsd_api.exception.base import AppException
+from bcsd_api.global_.exception.base import AppException
 
 
 class AppErrorExtension(SchemaExtension):

@@ -4,9 +4,9 @@ from fastapi import Depends, Request
 from sqlalchemy import Connection
 from strawberry.fastapi import BaseContext
 
-from bcsd_api.auth import token as jwt_token
-from bcsd_api.authz.client import AuthzClient
-from bcsd_api.core.config import Settings
+from bcsd_api.global_.auth import token as jwt_token
+from bcsd_api.global_.authz.client import AuthzClient
+from bcsd_api.common.config import Settings
 from bcsd_api.dependencies import (
     get_ans_repo,
     get_app_repo,
@@ -20,13 +20,13 @@ from bcsd_api.dependencies import (
     get_setting_repo,
     get_settings,
 )
-from bcsd_api.exception import Unauthorized
-from bcsd_api.apply.pg_repository import PgAnswerRepository, PgApplicationRepository
-from bcsd_api.form.pg_repository import PgFormRepository, PgQuestionRepository
-from bcsd_api.member.pg_repository import PgMemberRepository
-from bcsd_api.recruit.pg_repository import PgRecruitRepository
-from bcsd_api.setting.pg_repository import PgSettingRepository
-from bcsd_api.shorten.pg_repository import PgLinkRepository
+from bcsd_api.global_.exception import Unauthorized
+from bcsd_api.domain.apply.repository import PgAnswerRepository, PgApplicationRepository
+from bcsd_api.domain.form.repository import PgFormRepository, PgQuestionRepository
+from bcsd_api.domain.member.repository import PgMemberRepository
+from bcsd_api.domain.recruit.repository import PgRecruitRepository
+from bcsd_api.domain.setting.repository import PgSettingRepository
+from bcsd_api.domain.shorten.repository import PgLinkRepository
 
 logger = logging.getLogger(__name__)
 
