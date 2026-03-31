@@ -5,7 +5,7 @@ from fastapi.responses import JSONResponse
 
 from .base import AppException
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("bcsd_api.error")
 
 
 def register_handlers(app: FastAPI) -> None:
@@ -16,6 +16,8 @@ def register_handlers(app: FastAPI) -> None:
 
     @app.exception_handler(Exception)
     async def _unhandled(request: Request, exc: Exception) -> JSONResponse:
-        logger.error("%s %s: %s", request.method, request.url.path, exc, exc_info=exc)
+        logging.getLogger().error(
+            "%s %s: %s", request.method, request.url.path, exc, exc_info=exc,
+        )
         body = {"error_code": "INTERNAL_ERROR", "message": "internal server error"}
         return JSONResponse(status_code=500, content=body)
