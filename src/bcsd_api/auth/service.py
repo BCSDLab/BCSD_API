@@ -42,17 +42,40 @@ def register(
 ) -> tuple[str, str]:
     profile = google_auth.verify_token(google_token, settings.google_client_id)
     _check_google(profile["email"], repo)
-    _check_school_email(school_email, repo)
+    existing = repo.find_by_school_email(school_email)
+    if existing:
+        return _link_account(existing, profile["email"], settings, repo, conn)
+    return _create_member(
+        profile["email"], name, department, student_id,
+        school_email, phone, track, grade, settings, repo, conn,
+    )
+
+
+def _link_account(
+    member: dict, google_email: str,
+    settings: Settings, repo: PgMemberRepository, conn: Connection,
+) -> tuple[str, str]:
+    repo.add_account(generate_id("MA"), member["id"], "google", google_email, _now_kst())
+    routing = _resolve_routing(member.get("grade", ""), conn)
+    token = _issue_jwt({"sub": member["id"], "email": google_email}, settings)
+    return token, routing
+
+
+def _create_member(
+    google_email: str, name: str, department: str,
+    student_id: str, school_email: str, phone: str,
+    track: str | None, grade: str,
+    settings: Settings, repo: PgMemberRepository, conn: Connection,
+) -> tuple[str, str]:
     member_id = generate_id("M")
-    now = _now_kst()
     row = _build_row(
-        member_id, name, profile["email"],
+        member_id, name, google_email,
         department, student_id, school_email, phone, track, grade,
     )
     repo.create(row)
-    repo.add_account(generate_id("MA"), member_id, "google", profile["email"], now)
+    repo.add_account(generate_id("MA"), member_id, "google", google_email, _now_kst())
     routing = _resolve_routing(grade, conn)
-    token = _issue_jwt({"sub": member_id, "email": profile["email"]}, settings)
+    token = _issue_jwt({"sub": member_id, "email": google_email}, settings)
     return token, routing
 
 
@@ -66,11 +89,6 @@ def _issue_jwt(payload: dict, settings: Settings) -> str:
 def _check_google(email: str, repo: PgMemberRepository) -> None:
     if repo.find_account("google", email):
         raise Conflict("이미 가입된 Google 계정입니다")
-
-
-def _check_school_email(school_email: str, repo: PgMemberRepository) -> None:
-    if repo.find_by_school_email(school_email):
-        raise Conflict("이미 가입된 학교 이메일입니다")
 
 
 def _now_kst() -> str:
