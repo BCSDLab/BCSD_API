@@ -19,6 +19,7 @@ def redirect_link(
         url, link_id = service.resolve(repo, code)
     except Gone:
         return RedirectResponse(url="/expired", status_code=302)
+
     referer = request.headers.get("referer", "")
     agent = request.headers.get("user-agent", "")
     service.record_click(repo, link_id, referer, agent)

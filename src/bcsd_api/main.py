@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .auth.router import router as auth_router
 from .dependencies import get_authz, get_settings
 from .exception import register_handlers
-from .redirect import router as redirect_router
+from .shorten.redirect import router as redirect_router
 
 logger = logging.getLogger(__name__)
 
