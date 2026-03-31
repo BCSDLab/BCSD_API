@@ -1,6 +1,6 @@
 from sqlalchemy import Connection, select
 
-from bcsd_api.tables import app_settings
+from bcsd_api.core.tables import app_settings
 
 
 class PgSettingRepository:
@@ -18,7 +18,7 @@ class PgSettingRepository:
     def upsert(self, key: str, value: str, updated_by: str) -> None:
         from datetime import datetime
 
-        from bcsd_api.timezone import KST
+        from bcsd_api.core.timezone import KST
 
         now = datetime.now(KST).strftime("%Y-%m-%d %H:%M:%S")
         existing = self.get(key)

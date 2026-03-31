@@ -6,8 +6,8 @@ from sqlalchemy import Connection
 
 from .auth import token as jwt_token
 from .authz.client import AuthzClient
-from .config import Settings
-from .database import create_engine, get_connection
+from .core.config import Settings
+from .core.database import create_engine, get_connection
 from .email import ResendSender
 from .email.sender import EmailSender
 from .exception import Unauthorized
@@ -16,7 +16,6 @@ from .form.pg_repository import PgFormRepository, PgQuestionRepository
 from .member.pg_repository import PgMemberRepository
 from .recruit.pg_repository import PgRecruitRepository
 from .setting.pg_repository import PgSettingRepository
-from .sheets.client import SheetsClient
 from .shorten.pg_repository import PgLinkRepository
 
 
@@ -33,15 +32,6 @@ def _make_engine(database_url: str):
 def get_conn(settings: Settings = Depends(get_settings)) -> Iterator[Connection]:
     engine = _make_engine(settings.database_url)
     yield from get_connection(engine)
-
-
-@lru_cache
-def _create_sheets(credentials: str, sheets_id: str) -> SheetsClient:
-    return SheetsClient(credentials, sheets_id)
-
-
-def get_sheets(settings: Settings = Depends(get_settings)) -> SheetsClient:
-    return _create_sheets(settings.google_service_account_file, settings.google_sheets_id)
 
 
 @lru_cache

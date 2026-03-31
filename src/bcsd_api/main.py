@@ -39,7 +39,7 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
 def _init_pg(settings) -> None:
     from sqlalchemy import text
 
-    from .database import create_engine
+    from .core.database import create_engine
 
     engine = create_engine(settings.database_url)
     with engine.connect() as conn:
@@ -57,7 +57,7 @@ def create_app() -> FastAPI:
         redoc_url=None,
     )
     settings = get_settings()
-    from . import slack_log
+    from .core import slack_log
     slack_log.setup(settings.slack_bot_token, settings.slack_error_channel)
     app.add_middleware(
         CORSMiddleware,

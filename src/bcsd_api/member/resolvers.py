@@ -41,7 +41,7 @@ def resolve_filters(info: Info[GqlContext, None]) -> FiltersType:
 def resolve_tracks(info: Info[GqlContext, None]) -> list[str]:
     from sqlalchemy import select
 
-    from bcsd_api.tables import tracks
+    from bcsd_api.core.tables import tracks
 
     rows = info.context.conn.execute(select(tracks.c.name))
     return [row.name for row in rows]

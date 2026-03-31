@@ -1,7 +1,7 @@
 from sqlalchemy import Connection, insert, select, update
 
-from bcsd_api.repository import BaseRepository
-from bcsd_api.tables import member_accounts, members
+from bcsd_api.core.repository import BaseRepository
+from bcsd_api.core.tables import member_accounts, members
 
 
 class PgMemberRepository(BaseRepository):

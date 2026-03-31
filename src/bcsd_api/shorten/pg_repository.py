@@ -1,7 +1,7 @@
 from sqlalchemy import Connection, delete, insert, select, update
 
-from bcsd_api.repository import BaseRepository
-from bcsd_api.tables import link_clicks, links
+from bcsd_api.core.repository import BaseRepository
+from bcsd_api.core.tables import link_clicks, links
 
 _MUTABLE = frozenset({
     "title", "description", "url",

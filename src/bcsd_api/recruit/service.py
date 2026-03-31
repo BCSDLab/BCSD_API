@@ -1,8 +1,8 @@
 from datetime import datetime
 
 from bcsd_api.exception import NotFound
-from bcsd_api.id_gen import generate_id
-from bcsd_api.timezone import KST
+from bcsd_api.core.id_gen import generate_id
+from bcsd_api.core.timezone import KST
 
 from .pg_repository import PgRecruitRepository
 from .schema import CreatePeriodRequest, PeriodResponse, UpdatePeriodRequest

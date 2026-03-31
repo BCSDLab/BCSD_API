@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Response
 from sqlalchemy import Connection
 
-from bcsd_api.config import Settings
+from bcsd_api.core.config import Settings
 from bcsd_api.dependencies import (
     current_user, get_conn, get_email_sender, get_member_repo, get_settings,
 )

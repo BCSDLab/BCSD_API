@@ -2,13 +2,13 @@ from datetime import datetime
 
 from sqlalchemy import Connection, select
 
-from bcsd_api.config import Settings
+from bcsd_api.core.config import Settings
 from bcsd_api.email.sender import EmailSender
 from bcsd_api.exception import Conflict, Unauthorized
-from bcsd_api.id_gen import generate_id
+from bcsd_api.core.id_gen import generate_id
 from bcsd_api.member.pg_repository import PgMemberRepository
-from bcsd_api.tables import app_settings
-from bcsd_api.timezone import KST
+from bcsd_api.core.tables import app_settings
+from bcsd_api.core.timezone import KST
 
 from . import google as google_auth
 from . import token as jwt_token

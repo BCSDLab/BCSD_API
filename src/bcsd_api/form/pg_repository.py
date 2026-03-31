@@ -1,7 +1,7 @@
 from sqlalchemy import Connection, delete, insert, select, update
 
-from bcsd_api.repository import BaseRepository
-from bcsd_api.tables import form_questions, forms
+from bcsd_api.core.repository import BaseRepository
+from bcsd_api.core.tables import form_questions, forms
 
 
 class PgFormRepository(BaseRepository):

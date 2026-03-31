@@ -3,7 +3,7 @@ from sqlalchemy import Connection, select
 from bcsd_api.exception import NotFound
 from bcsd_api.filter.base import PagedResponse, apply_filter
 from bcsd_api.filter.members import MemberFilter
-from bcsd_api.tables import members, statuses, tracks
+from bcsd_api.core.tables import members, statuses, tracks
 
 from .pg_repository import PgMemberRepository
 from .schema import FiltersResponse, MemberDetail, MemberResponse

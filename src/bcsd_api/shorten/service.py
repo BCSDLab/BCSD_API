@@ -6,9 +6,9 @@ from datetime import datetime
 from bcsd_api.exception import Conflict, Gone, NotFound
 from bcsd_api.filter.base import PagedResponse, apply_filter
 from bcsd_api.filter.links import LinkFilter
-from bcsd_api.id_gen import generate_id
+from bcsd_api.core.id_gen import generate_id
 from bcsd_api.member.pg_repository import PgMemberRepository
-from bcsd_api.timezone import KST
+from bcsd_api.core.timezone import KST
 
 from .pg_repository import PgLinkRepository
 from .schema import (

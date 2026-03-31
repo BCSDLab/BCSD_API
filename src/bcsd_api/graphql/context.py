@@ -6,7 +6,7 @@ from strawberry.fastapi import BaseContext
 
 from bcsd_api.auth import token as jwt_token
 from bcsd_api.authz.client import AuthzClient
-from bcsd_api.config import Settings
+from bcsd_api.core.config import Settings
 from bcsd_api.dependencies import (
     get_ans_repo,
     get_app_repo,

@@ -88,13 +88,10 @@ $COMPOSE build "api-${NEXT}"
 echo "3. Running DB migrations..."
 $COMPOSE run --rm --no-deps "api-${NEXT}" alembic upgrade head
 
-echo "4. Seeding PG from Sheets (if empty)..."
-$COMPOSE run --rm --no-deps "api-${NEXT}" python -m bcsd_api.sync.seed
-
-echo "5. Starting $NEXT..."
+echo "4. Starting $NEXT..."
 $COMPOSE up -d --remove-orphans "api-${NEXT}"
 
-echo "6. Health check on api-${NEXT}..."
+echo "5. Health check on api-${NEXT}..."
 if ! health_check "$NEXT"; then
     echo "FAIL: $NEXT did not become healthy"
     echo "--- Container logs ---"
@@ -104,17 +101,17 @@ if ! health_check "$NEXT"; then
     exit 1
 fi
 
-echo "7. Switching nginx → $NEXT"
+echo "6. Switching nginx → $NEXT"
 sed -i "s/proxy_pass http:\/\/api_${CURRENT}/proxy_pass http:\/\/api_${NEXT}/g" "$NGINX_CONF"
 sudo mkdir -p /var/www/certbot
 sudo cp "$NGINX_CONF" "$NGINX_AVAILABLE"
 sudo ln -sf "$NGINX_AVAILABLE" "$NGINX_ENABLED"
 sudo nginx -t && sudo nginx -s reload
 
-echo "8. Stopping old ($CURRENT)..."
+echo "7. Stopping old ($CURRENT)..."
 $COMPOSE stop "api-${CURRENT}"
 
-echo "9. Initializing n8n..."
+echo "8. Initializing n8n..."
 bash infra/scripts/init_n8n.sh
 
 echo "=== Deploy complete: $NEXT is live ==="

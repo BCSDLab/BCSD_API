@@ -1,7 +1,7 @@
 from sqlalchemy import Connection, insert, select, update
 
-from bcsd_api.repository import BaseRepository
-from bcsd_api.tables import recruitment_periods
+from bcsd_api.core.repository import BaseRepository
+from bcsd_api.core.tables import recruitment_periods
 
 
 class PgRecruitRepository(BaseRepository):

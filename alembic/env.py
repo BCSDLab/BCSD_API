@@ -5,9 +5,9 @@ from sqlalchemy import engine_from_config
 
 from alembic import context
 
-from bcsd_api.config import Settings
-from bcsd_api.database import metadata
-import bcsd_api.tables  # noqa: F401 — registers tables on metadata
+from bcsd_api.core.config import Settings
+from bcsd_api.core.database import metadata
+import bcsd_api.core.tables  # noqa: F401 — registers tables on metadata
 
 config = context.config
 

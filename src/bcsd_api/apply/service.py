@@ -3,10 +3,10 @@ from datetime import datetime
 
 from bcsd_api.exception import BadRequest, Conflict, Forbidden, NotFound
 from bcsd_api.form.pg_repository import PgFormRepository, PgQuestionRepository
-from bcsd_api.id_gen import generate_id
+from bcsd_api.core.id_gen import generate_id
 from bcsd_api.member.pg_repository import PgMemberRepository
 from bcsd_api.setting.pg_repository import PgSettingRepository
-from bcsd_api.timezone import KST
+from bcsd_api.core.timezone import KST
 
 from .pg_repository import PgAnswerRepository, PgApplicationRepository
 from .schema import (
