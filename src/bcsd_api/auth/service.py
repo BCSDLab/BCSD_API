@@ -41,7 +41,7 @@ def register(
     settings: Settings, repo: PgMemberRepository, conn: Connection,
 ) -> tuple[str, str]:
     profile = google_auth.verify_token(google_token, settings.google_client_id)
-    _check_duplicate(profile["email"], repo)
+    _check_duplicate(profile["email"], school_email, repo)
     member_id = generate_id("M")
     row = _build_row(
         member_id, name, profile["email"],
@@ -60,9 +60,11 @@ def _issue_jwt(payload: dict, settings: Settings) -> str:
     )
 
 
-def _check_duplicate(email: str, repo: PgMemberRepository) -> None:
+def _check_duplicate(email: str, school_email: str, repo: PgMemberRepository) -> None:
     if repo.find_by_email(email):
-        raise Conflict("member already registered")
+        raise Conflict("이미 가입된 Google 계정입니다")
+    if repo.find_by_school_email(school_email):
+        raise Conflict("이미 가입된 학교 이메일입니다")
 
 
 def _now_kst() -> str:

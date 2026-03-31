@@ -16,6 +16,14 @@ class PgMemberRepository(BaseRepository):
             return None
         return row._asdict()
 
+    def find_by_school_email(self, school_email: str) -> dict | None:
+        row = self._conn.execute(
+            select(members).where(members.c.school_email == school_email),
+        ).first()
+        if not row:
+            return None
+        return row._asdict()
+
     def create(self, row: dict) -> None:
         self._conn.execute(insert(members).values(**row))
 

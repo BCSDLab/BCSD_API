@@ -9,7 +9,7 @@ members = Table(
     Column("email", String, nullable=False, unique=True),
     Column("department", String),
     Column("student_id", String),
-    Column("school_email", String),
+    Column("school_email", String, unique=True),
     Column("phone", String),
     Column("status", String, nullable=False, server_default="Beginner"),
     Column("track", String),
