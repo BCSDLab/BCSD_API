@@ -1,14 +1,12 @@
 from collections.abc import Sequence
 from datetime import datetime
 
-from bcsd_api.global_.exception import BadRequest, Conflict, Forbidden, NotFound
-from bcsd_api.domain.form.repository import PgFormRepository, PgQuestionRepository
 from bcsd_api.common.id_gen import generate_id
+from bcsd_api.common.timezone import KST
+from bcsd_api.domain.form.repository import PgFormRepository, PgQuestionRepository
 from bcsd_api.domain.member.repository import PgMemberRepository
 from bcsd_api.domain.setting.repository import PgSettingRepository
-from bcsd_api.common.timezone import KST
-
-from .repository import PgAnswerRepository, PgApplicationRepository
+from bcsd_api.global_.exception import BadRequest, Conflict, Forbidden, NotFound
 from .model import (
     AnswerRequest,
     AnswerResponse,
@@ -16,6 +14,7 @@ from .model import (
     MyApplicationResponse,
     PaymentInfoResponse,
 )
+from .repository import PgAnswerRepository, PgApplicationRepository
 
 
 def _now() -> str:
@@ -191,16 +190,15 @@ def approve(
     return approved
 
 
-_STATUS_RELATION = {"Beginner": "beginner", "Regular": "regular"}
-
-
 def _add_org_relation(authz, member_id: str, status: str) -> None:
     if not authz:
         return
-    relation = _STATUS_RELATION.get(status)
+    from bcsd_api.common.constants import ORG_ID, STATUS_RELATION
+
+    relation = STATUS_RELATION.get(status)
     if not relation:
         return
-    authz.add_relation("organization", "bcsdlab", relation, member_id)
+    authz.add_relation("organization", ORG_ID, relation, member_id)
 
 
 def cancel(

@@ -1,10 +1,9 @@
 import logging
 
+from bcsd_api.common.constants import ORG_ID
 from bcsd_api.global_.exception import Forbidden
 
 logger = logging.getLogger(__name__)
-
-ORG_ID = "bcsdlab"
 
 
 def require_permission(authz, permission: str, user_id: str) -> None:

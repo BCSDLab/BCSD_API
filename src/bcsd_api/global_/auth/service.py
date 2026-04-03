@@ -3,13 +3,12 @@ from datetime import datetime
 from sqlalchemy import Connection, select
 
 from bcsd_api.common.config import Settings
-from bcsd_api.infra.email.sender import EmailSender
-from bcsd_api.global_.exception import Conflict, Unauthorized
 from bcsd_api.common.id_gen import generate_id
-from bcsd_api.domain.member.repository import PgMemberRepository
 from bcsd_api.common.tables import app_settings
 from bcsd_api.common.timezone import KST
-
+from bcsd_api.domain.member.repository import PgMemberRepository
+from bcsd_api.global_.exception import Conflict, Unauthorized
+from bcsd_api.infra.email.sender import EmailSender
 from . import google as google_auth
 from . import token as jwt_token
 from . import verify
@@ -111,12 +110,11 @@ def _build_row(
     }
 
 
-_GRADE_MAP = {"1학년": 1, "2학년": 2, "3학년": 3, "4학년": 4, "대학원": 5}
-
-
 def _resolve_routing(grade: str, conn: Connection) -> str:
+    from bcsd_api.common.constants import GRADE_MAP
+
     threshold = _grade_threshold(conn)
-    level = _GRADE_MAP.get(grade, 1)
+    level = GRADE_MAP.get(grade, 1)
     if level >= threshold:
         return "conversion"
     return "beginner"
